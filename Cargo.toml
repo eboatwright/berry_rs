@@ -1,0 +1,12 @@
+[package]
+name = "project_template"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# version 0.3.10
+macroquad = { git = "https://github.com/not-fl3/macroquad", rev = "2fae135" }
+# version "0.6.5"
+hecs = { git = "https://github.com/Ralith/hecs", rev = "64c2ca5" }
