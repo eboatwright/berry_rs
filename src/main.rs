@@ -9,8 +9,8 @@ use crate::master::Master;
 use macroquad::prelude::*;
 use hecs::World;
 
-const SCREEN_WIDTH: i32 = 960 / 4;
-const SCREEN_HEIGHT: i32 = 600 / 4;
+const SCREEN_WIDTH: i32 = 960 / 1;
+const SCREEN_HEIGHT: i32 = 600 / 1;
 
 fn window_conf() -> Conf {
     Conf {

@@ -18,29 +18,35 @@ pub fn clamp_i32(min: i32, val: i32, max: i32) -> i32 {
 	else { val }
 }
 
+pub fn clamp_usize(min: usize, val: usize, max: usize) -> usize {
+	if val > max { max }
+	else if val < min { min }
+	else { val }
+}
+
 pub fn delta_time() -> f32 { get_frame_time() * 60.0 }
 
 pub fn get_file_path(path: &'static str) -> String {
-	let mut full_path = env::current_exe().unwrap();
-	full_path.pop();
-	full_path.push(&path);
-	full_path.as_os_str().to_str().unwrap().to_string()
+	return if cfg!(wasm32_unknown_unknown) {
+		path.to_string()
+	} else {
+		let mut full_path = env::current_exe().unwrap();
+		full_path.pop();
+		full_path.push(&path);
+		full_path.as_os_str().to_str().unwrap().to_string()
+	}
 }
 
 pub async fn load_texture_file(file_path: &'static str) -> Texture2D {
-	let mut final_path = get_file_path(file_path);
-	if cfg!(wasm32_unknown_unknown) {
-		final_path = file_path.to_string();
-	}
-	load_texture(&final_path).await.unwrap()
+	load_texture(&get_file_path(file_path)).await.unwrap()
 }
 
 pub async fn load_sound_file(file_path: &'static str) -> Sound {
-	let mut final_path = get_file_path(file_path);
-	if cfg!(wasm32_unknown_unknown) {
-		final_path = file_path.to_string();
-	}
-	audio::load_sound(&final_path).await.unwrap()
+	audio::load_sound(&get_file_path(file_path)).await.unwrap()
+}
+
+pub async fn load_font_file(file_path: &'static str) -> Font {
+	load_ttf_font(&get_file_path(file_path)).await.unwrap()
 }
 
 pub fn get_mouse_position(master: &Master) -> Vec2 {
