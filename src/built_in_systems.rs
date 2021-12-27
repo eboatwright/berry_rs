@@ -4,7 +4,7 @@ use crate::built_in_components::*;
 use hecs::World;
 
 // TODO: rigidbody entity collision?
-pub fn rigidbody2d_system(world: &mut World) {
+pub fn rigidbody2d_update_system(world: &mut World) {
 	for (entity, (transform, rigidbody2d, _dynamic)) in &mut world.query::<(&mut Transform, &mut Rigidbody2D, &Dynamic)>() {
 		rigidbody2d.grounded -= 1.0;
 
@@ -112,6 +112,41 @@ pub fn rigidbody2d_system(world: &mut World) {
 	}
 }
 
+pub fn animator_update_system(world: &mut World) {
+	for (entity, animator) in &mut world.query::<&mut Animator>() {
+		animator.animation_timer -= 1.0;
+		if animator.animation_timer <= 0.0 {
+			animator.animation_timer = animator.current_animation.frame_duration;
+			animator.animation_frame_index += 1;
+			if animator.animation_frame_index >= animator.current_animation.frames.len() {
+				animator.animation_frame_index = 0;
+				animator.dont_interrupt = false;
+			}
+			if let Ok(_animate_texture) = world.get::<AnimateTexture>(entity) {
+				if let Ok(mut texture) = world.get_mut::<Texture>(entity) {
+					texture.source.x = animator.current_frame() as f32 * texture.source.w;
+				}
+			}
+		}
+	}
+}
+
+pub fn sin_wave_update_system(world: &mut World, master: &Master) {
+	for (_entity, sin_wave) in &mut world.query::<&mut SinWave>() {
+		sin_wave.value = f64::sin(master.time_since_start * sin_wave.speed + sin_wave.offset) * sin_wave.distance;
+	}
+}
+
+pub fn camera_update_system(world: &mut World, master: &mut Master) {
+	for (_entity, (transform, camera_target)) in &mut world.query::<(&Transform, &CameraTarget)>() {
+		master.camera_pos = master.camera_pos.lerp((transform.position + camera_target.offset).truncate(), camera_target.smoothing).round();
+	}
+
+	for (_entity, (transform, follow_camera)) in &mut world.query::<(&mut Transform, &FollowCamera)>() {
+		transform.position = (master.camera_pos.extend(0.0) + follow_camera.offset).round();
+	}
+}
+
 pub fn texture_render_system(world: &mut World, layer: &'static str) {
 	for (_entity, (transform, texture)) in &mut world.query::<(&Transform, &Texture)>() {
 		if texture.render_layer == layer {
@@ -165,31 +200,6 @@ pub fn map_render_system(world: &mut World, layer: &'static str) {
 				}
 			}
 		}
-	}
-}
-
-pub fn animator_update_system(world: &mut World) {
-	for (entity, animator) in &mut world.query::<&mut Animator>() {
-		animator.animation_timer -= 1.0;
-		if animator.animation_timer <= 0.0 {
-			animator.animation_timer = animator.current_animation.frame_duration;
-			animator.animation_frame_index += 1;
-			if animator.animation_frame_index >= animator.current_animation.frames.len() {
-				animator.animation_frame_index = 0;
-				animator.dont_interrupt = false;
-			}
-			if let Ok(_animate_texture) = world.get::<AnimateTexture>(entity) {
-				if let Ok(mut texture) = world.get_mut::<Texture>(entity) {
-					texture.source.x = animator.current_frame() as f32 * texture.source.w;
-				}
-			}
-		}
-	}
-}
-
-pub fn sin_wave_update_system(world: &mut World, master: &Master) {
-	for (_entity, sin_wave) in &mut world.query::<&mut SinWave>() {
-		sin_wave.value = f64::sin(master.time_since_start * sin_wave.speed + sin_wave.offset) * sin_wave.distance;
 	}
 }
 

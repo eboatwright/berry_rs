@@ -26,7 +26,7 @@ pub fn clamp_usize(min: usize, val: usize, max: usize) -> usize {
 
 pub fn delta_time() -> f32 { get_frame_time() * 60.0 }
 
-pub fn get_file_path(path: &'static str) -> String {
+pub fn get_file_path(path: String) -> String {
 	return if cfg!(wasm32_unknown_unknown) {
 		path.to_string()
 	} else {
@@ -37,15 +37,15 @@ pub fn get_file_path(path: &'static str) -> String {
 	}
 }
 
-pub async fn load_texture_file(file_path: &'static str) -> Texture2D {
+pub async fn load_texture_file(file_path: String) -> Texture2D {
 	load_texture(&get_file_path(file_path)).await.unwrap()
 }
 
-pub async fn load_sound_file(file_path: &'static str) -> Sound {
+pub async fn load_sound_file(file_path: String) -> Sound {
 	audio::load_sound(&get_file_path(file_path)).await.unwrap()
 }
 
-pub async fn load_font_file(file_path: &'static str) -> Font {
+pub async fn load_font_file(file_path: String) -> Font {
 	load_ttf_font(&get_file_path(file_path)).await.unwrap()
 }
 
@@ -60,4 +60,20 @@ pub fn get_mouse_position(master: &Master) -> Vec2 {
 	mouse_pos.1 += master.camera_pos.y;
 
 	vec2(mouse_pos.0, mouse_pos.1)
+}
+
+pub fn get_input_axis(left: KeyCode, right: KeyCode) -> f32 {
+	let mut input = 0.0;
+	if is_key_down(left) {
+		input -= 1.0;
+	}
+	if is_key_down(right) {
+		input += 1.0;
+	}
+	input
+}
+
+pub fn get_movement_input(up: KeyCode, down: KeyCode, left: KeyCode, right: KeyCode) -> Vec2 {
+	let vec = vec2(get_input_axis(left, right), get_input_axis(up, down));
+	vec.normalize_or_zero()
 }

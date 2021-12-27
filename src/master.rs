@@ -33,8 +33,9 @@ impl Master {
 
 	pub fn update(&mut self, world: &mut World) {
 		self.time_since_start = get_time();
-		rigidbody2d_system(world);
+		rigidbody2d_update_system(world);
 		animator_update_system(world);
+		camera_update_system(world);
 	}
 
 	pub fn render(&self, world: &mut World) {

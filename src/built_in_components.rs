@@ -134,7 +134,7 @@ pub struct Map {
 }
 
 impl Map {
-	pub fn read(path: &'static str) -> Vec<Vec<i32>> {
+	pub fn read(path: String) -> Vec<Vec<i32>> {
 		let save = fs::read_to_string(format!("{}.blueberry-map", get_file_path(path))).unwrap();
 		let mut tiles: Vec<Vec<i32>> = Vec::new();
 		for line in save.split('\n') {
@@ -146,6 +146,15 @@ impl Map {
 		}
 		tiles
 	}
+}
+
+pub struct CameraTarget {
+	pub smoothing: f32,
+	pub offset: Vec3,
+}
+
+pub struct FollowCamera {
+	pub offset: Vec3,
 }
 
 pub struct Texture {
