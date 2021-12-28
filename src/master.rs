@@ -1,3 +1,4 @@
+use crate::resources::Resources;
 use crate::built_in_components::*;
 use crate::built_in_systems::*;
 use crate::util::load_texture_file;
@@ -7,24 +8,27 @@ use hecs::World;
 
 pub struct Master {
 	pub time_since_start: f64,
-	pub render_order: Vec<&'static str>,
 	pub camera_pos: Vec2,
+	pub render_order: Vec<&'static str>,
 	pub zoom: f32,
+	pub resources: Resources,
 }
 
 impl Master {
 	pub fn new() -> Master {
 		Master {
 			time_since_start: 0.0,
+			camera_pos: Vec2::ZERO,
 			render_order: vec![
 				"default",
 			],
-			camera_pos: Vec2::ZERO,
 			zoom: 1.0,
+			resources: Resources::empty(),
 		}
 	}
 
-	pub async fn init(&mut self, world: &mut World) {
+	pub fn load_empty_scene(&mut self, world: &mut World) {
+		*world = World::new();
 	}
 
 	pub fn update(&mut self, world: &mut World) {
@@ -36,10 +40,10 @@ impl Master {
 		follow_update_system(world);
 	}
 
-	pub fn render(&self, world: &mut World) {
+	pub fn render(&mut self, world: &mut World) {
 		for layer in self.render_order.iter() {
 			texture_render_system(world, layer);
-			map_render_system(world, layer);
+			map_render_system(world, self.camera_pos, layer);
 			text_render_system(world, layer);
 		}
 	}

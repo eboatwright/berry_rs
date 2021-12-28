@@ -5,6 +5,7 @@
 mod built_in_components;
 mod built_in_systems;
 mod master;
+mod resources;
 mod util;
 
 use crate::master::Master;
@@ -28,10 +29,10 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    let mut master = Master::new();
     let mut world = World::new();
-
-    let mut master: Master = Master::new();
-    master.init(&mut world).await;
+    master.resources.load().await;
+    master.load_empty_scene(&mut world);
     loop {
         master.update(&mut world);
 
@@ -56,8 +57,8 @@ async fn main() {
         let scaled_game_size_w = SCREEN_WIDTH as f32 * aspect_diff;
         let scaled_game_size_h = SCREEN_HEIGHT as f32 * aspect_diff;
 
-        let width_padding = (screen_width() - scaled_game_size_w) * 0.5f32;
-        let height_padding = (screen_height() - scaled_game_size_h) * 0.5f32;
+        let width_padding = (screen_width() - scaled_game_size_w) * 0.5;
+        let height_padding = (screen_height() - scaled_game_size_h) * 0.5;
 
         clear_background(BLACK);
 
