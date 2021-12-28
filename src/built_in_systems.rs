@@ -236,7 +236,11 @@ pub fn map_render_system(world: &mut World, layer: &'static str) {
 		if texture.render_layer == layer {
 			for y in 0..map.tiles.len() {
 				for x in 0..map.tiles[0].len() {
-					if map.tiles[y][x] != 0 {
+					if map.tiles[y][x] != 0
+					&& (y as f32 + 1.0) * (map.tile_size as f32) > master.camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+					&& (y as f32) * (map.tile_size as f32) < master.camera_pos.y + SCREEN_HEIGHT as f32 / 2.0
+					&& (x as f32 + 1.0) * (map.tile_size as f32) > master.camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+					&& (x as f32) * (map.tile_size as f32) < master.camera_pos.x + SCREEN_WIDTH as f32 / 2.0 {
 						draw_texture_ex(
 							texture.texture,
 							x as f32 * map.tile_size as f32,
