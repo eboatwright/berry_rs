@@ -10,6 +10,12 @@ pub fn clamp_f32(min: f32, val: f32, max: f32) -> f32 {
 	else { val }
 }
 
+pub fn clamp_f64(min: f64, val: f64, max: f64) -> f64 {
+	if val > max { max }
+	else if val < min { min }
+	else { val }
+}
+
 pub fn clamp_i32(min: i32, val: i32, max: i32) -> i32 {
 	if val > max { max }
 	else if val < min { min }

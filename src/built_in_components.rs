@@ -148,6 +148,21 @@ impl Map {
 	}
 }
 
+pub struct ParticleSpawner {
+	pub life: f32,
+	pub spawn_rate: f32,
+	pub spawn_timer: f32,
+	pub min_velocity: Vec2,
+	pub max_velocity: Vec2,
+	pub gravity: Vec2,
+	pub friction: Vec2,
+	pub texture: Texture2D,
+}
+
+pub struct Particle {
+	pub life: f32,
+}
+
 pub struct CameraTarget {
 	pub smoothing: f32,
 	pub offset: Vec3,

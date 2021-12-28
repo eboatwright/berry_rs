@@ -1,7 +1,10 @@
+use crate::util::delta_time;
 use crate::Master;
 use crate::built_in_components::*;
 use macroquad::prelude::*;
+use macroquad::rand::gen_range;
 use hecs::World;
+use hecs::Entity;
 
 // TODO: rigidbody entity collision?
 pub fn rigidbody2d_update_system(world: &mut World) {
@@ -128,6 +131,56 @@ pub fn animator_update_system(world: &mut World) {
 				}
 			}
 		}
+	}
+}
+
+pub fn particle_update_system(world: &mut World) {
+	let mut to_spawn: Vec<(Transform, Rigidbody2D, Dynamic, Particle, Texture)> = Vec::new();
+	for (_entity, (transform, particle_spawner)) in &mut world.query::<(&Transform, &mut ParticleSpawner)>() {
+		particle_spawner.spawn_timer -= delta_time();
+		if particle_spawner.spawn_timer <= 0.0 {
+			particle_spawner.spawn_timer = particle_spawner.spawn_rate;
+			to_spawn.push((
+				Transform {
+					position: vec3(0.0, 0.0, 0.0),
+					scale: Vec3::ONE,
+					rotation: Vec3::ZERO,
+				},
+				Rigidbody2D {
+					velocity: vec2(gen_range(particle_spawner.min_velocity.x, particle_spawner.max_velocity.x), gen_range(particle_spawner.min_velocity.y, particle_spawner.max_velocity.y)),
+					friction: particle_spawner.friction,
+					gravity: particle_spawner.gravity,
+					..Default::default()
+				},
+				Dynamic,
+				Particle {
+					life: particle_spawner.life,
+				},
+				Texture {
+					texture: particle_spawner.texture,
+					source: Rect {
+						x: 0.0,
+						y: 0.0,
+						w: particle_spawner.texture.height(),
+						h: particle_spawner.texture.height(),
+					},
+					..Default::default()
+				},
+			));
+		}
+	}
+	world.spawn_batch(to_spawn);
+
+	let mut to_destroy: Vec<Entity> = Vec::new();
+	for (entity, (transform, particle)) in &mut world.query::<(&mut Transform, &mut Particle)>() {
+		particle.life -= delta_time();
+		if particle.life <= 0.0 {
+			to_destroy.push(entity);
+			continue;
+		}
+	}
+	for entity in to_destroy {
+		world.despawn(entity).unwrap();
 	}
 }
 

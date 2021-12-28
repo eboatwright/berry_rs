@@ -31,6 +31,7 @@ impl Master {
 		self.time_since_start = get_time();
 		rigidbody2d_update_system(world);
 		animator_update_system(world);
+		particle_update_system(world);
 		camera_update_system(world, self);
 		follow_update_system(world);
 	}
