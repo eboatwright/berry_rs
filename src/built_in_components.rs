@@ -1,7 +1,7 @@
-use crate::util::get_file_path;
-use std::collections::HashMap;
-use macroquad::prelude::*;
 use std::fs;
+use std::collections::HashMap;
+use crate::util::get_file_path;
+use macroquad::prelude::*;
 
 pub struct Transform {
 	pub position: Vec3,

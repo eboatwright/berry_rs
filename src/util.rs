@@ -1,10 +1,8 @@
-use macroquad::{
-	prelude::*,
-	audio,
-	audio::Sound,
-};
-use crate::Master;
 use std::env;
+use macroquad::prelude::*;
+use macroquad::audio;
+use macroquad::audio::Sound;
+use crate::Master;
 
 pub fn clamp_f32(min: f32, val: f32, max: f32) -> f32 {
 	if val > max { max }

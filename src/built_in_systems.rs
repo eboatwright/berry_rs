@@ -1,6 +1,6 @@
 use crate::Master;
-use macroquad::prelude::*;
 use crate::built_in_components::*;
+use macroquad::prelude::*;
 use hecs::World;
 
 // TODO: rigidbody entity collision?
