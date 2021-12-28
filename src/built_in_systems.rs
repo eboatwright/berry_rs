@@ -147,6 +147,16 @@ pub fn camera_update_system(world: &mut World, master: &mut Master) {
 	}
 }
 
+pub fn follow_update_system(world: &mut World) {
+	for (_entity, (follower_transform, follow)) in &mut world.query::<(&mut Transform, &Follow)>() {
+		for (target_entity, target_transform) in &mut world.query::<&Transform>().without::<Follow>() {
+			if follow.id == target_entity.id() {
+				follower_transform.position = target_transform.position + follow.offset;
+			}
+		}
+	}
+}
+
 pub fn texture_render_system(world: &mut World, layer: &'static str) {
 	for (_entity, (transform, texture)) in &mut world.query::<(&Transform, &Texture)>() {
 		if texture.render_layer == layer {

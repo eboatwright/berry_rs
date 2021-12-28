@@ -157,6 +157,11 @@ pub struct FollowCamera {
 	pub offset: Vec3,
 }
 
+pub struct Follow {
+	pub id: u32,
+	pub offset: Vec3,
+}
+
 pub struct Texture {
 	pub render_layer: &'static str,
 	pub texture: Texture2D,
