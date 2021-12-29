@@ -1,3 +1,4 @@
+use crate::util::clamp_f32;
 use crate::SCREEN_WIDTH;
 use crate::SCREEN_HEIGHT;
 use crate::util::delta_time;
@@ -9,8 +10,8 @@ use hecs::World;
 use hecs::Entity;
 
 // TODO: rigidbody entity collision?
-pub fn rigidbody2d_update_system(world: &mut World) {
-	for (entity, (transform, rigidbody2d, _dynamic)) in &mut world.query::<(&mut Transform, &mut Rigidbody2D, &Dynamic)>() {
+pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
+	for (entity, (transform, rigidbody2d)) in &mut world.query::<(&mut Transform, &mut Rigidbody2D)>().without::<Static>() {
 		rigidbody2d.grounded -= 1.0;
 
 		rigidbody2d.velocity.x += rigidbody2d.gravity.x;
@@ -18,46 +19,47 @@ pub fn rigidbody2d_update_system(world: &mut World) {
 		transform.position.x += rigidbody2d.velocity.x;
 
 		if let Ok(collider) = world.get::<BoxCollider2D>(entity) {
-			if let Ok(_collide_with_map) = world.get::<CollideWithMap>(entity) {
-				for (_map_entity, map) in &mut world.query::<&Map>() {
-					let mut tile_transform = Transform::default();
-					let mut tile_collider;
-					let mut collision = (true, true, true, true);
-					for y in 0..map.tiles.len() {
-						for x in 0..map.tiles[0].len() {
-							if map.tiles[y][x] != 0
-							&& !map.ignore_collision.contains(&map.tiles[y][x]) {
-								tile_transform.position = vec3(x as f32 * map.tile_size as f32, y as f32 * map.tile_size as f32, 0.0);
-								tile_collider = match map.special_collisions.get(&map.tiles[y][x]) {
-									Some((collider, up_collision, down_collision, left_collision, right_collision)) => {
-										collision = (*up_collision, *down_collision, *left_collision, *right_collision);
-										*collider
-									},
-									None => BoxCollider2D {
-										size: vec2(map.tile_size as f32, map.tile_size as f32),
-										offset: Vec2::ZERO,
-									},
-								};
-								if collider.overlaps(transform, &tile_collider, &tile_transform) {
-									if rigidbody2d.velocity.x < 0.0
-									&& collision.2 {
-										rigidbody2d.velocity.x = 0.0;
-										transform.position.x = tile_transform.position.x + tile_collider.size.x - collider.offset.x + tile_collider.offset.x;
-										if rigidbody2d.gravity.x < 0.0 {
-											rigidbody2d.grounded = rigidbody2d.grounded_time;
-										}
-									}
-									if rigidbody2d.velocity.x > 0.0
-									&& collision.3 {
-										rigidbody2d.velocity.x = 0.0;
-										transform.position.x = tile_transform.position.x - collider.size.x - collider.offset.x + tile_collider.offset.x;
-										if rigidbody2d.gravity.x > 0.0 {
-											rigidbody2d.grounded = rigidbody2d.grounded_time;
-										}
+			for (_map_entity, map) in &mut world.query::<&Map>() {
+				let mut tile_transform = Transform::default();
+				let mut tile_collider;
+				let mut collision = (true, true, true, true);
+				let mut tile_pos = vec2(transform.position.y / map.tile_size as f32, transform.position.y / map.tile_size as f32 - 10.0);
+				tile_pos.y = clamp_f32(0.0, tile_pos.y, map.tiles.len() as f32);
+				tile_pos.x = clamp_f32(0.0, tile_pos.x, map.tiles[0].len() as f32);
+				for y in (tile_pos.y - 10.0) as usize..(tile_pos.y - 10.0) as usize {
+					for x in (tile_pos.x - 10.0) as usize..(tile_pos.x - 10.0) as usize {
+						if map.tiles[y][x] != 0
+						&& !map.ignore_collision.contains(&map.tiles[y][x]) {
+							tile_transform.position = vec3(x as f32 * map.tile_size as f32, y as f32 * map.tile_size as f32, 0.0);
+							tile_collider = match map.special_collisions.get(&map.tiles[y][x]) {
+								Some((collider, up_collision, down_collision, left_collision, right_collision)) => {
+									collision = (*up_collision, *down_collision, *left_collision, *right_collision);
+									*collider
+								},
+								None => BoxCollider2D {
+									size: vec2(map.tile_size as f32, map.tile_size as f32),
+									offset: Vec2::ZERO,
+								},
+							};
+							if collider.overlaps(transform, &tile_collider, &tile_transform) {
+								if rigidbody2d.velocity.x < 0.0
+								&& collision.2 {
+									rigidbody2d.velocity.x = 0.0;
+									transform.position.x = tile_transform.position.x + tile_collider.size.x - collider.offset.x + tile_collider.offset.x;
+									if rigidbody2d.gravity.x < 0.0 {
+										rigidbody2d.grounded = rigidbody2d.grounded_time;
 									}
 								}
-								collision = (true, true, true, true);
+								if rigidbody2d.velocity.x > 0.0
+								&& collision.3 {
+									rigidbody2d.velocity.x = 0.0;
+									transform.position.x = tile_transform.position.x - collider.size.x - collider.offset.x + tile_collider.offset.x;
+									if rigidbody2d.gravity.x > 0.0 {
+										rigidbody2d.grounded = rigidbody2d.grounded_time;
+									}
+								}
 							}
+							collision = (true, true, true, true);
 						}
 					}
 				}
@@ -69,46 +71,47 @@ pub fn rigidbody2d_update_system(world: &mut World) {
 		transform.position.y += rigidbody2d.velocity.y;
 
 		if let Ok(collider) = world.get::<BoxCollider2D>(entity) {
-			if let Ok(_collide_with_map) = world.get::<CollideWithMap>(entity) {
-				for (_map_entity, map) in &mut world.query::<&Map>() {
-					let mut tile_transform = Transform::default();
-					let mut tile_collider;
-					let mut collision = (true, true, true, true);
-					for y in 0..map.tiles.len() {
-						for x in 0..map.tiles[0].len() {
-							if map.tiles[y][x] != 0
-							&& !map.ignore_collision.contains(&map.tiles[y][x]) {
-								tile_transform.position = vec3(x as f32 * map.tile_size as f32, y as f32 * map.tile_size as f32, 0.0);
-								tile_collider = match map.special_collisions.get(&map.tiles[y][x]) {
-									Some((collider, up_collision, down_collision, left_collision, right_collision)) => {
-										collision = (*up_collision, *down_collision, *left_collision, *right_collision);
-										*collider
-									},
-									None => BoxCollider2D {
-										size: vec2(map.tile_size as f32, map.tile_size as f32),
-										offset: Vec2::ZERO,
-									},
-								};
-								if collider.overlaps(transform, &tile_collider, &tile_transform) {
-									if rigidbody2d.velocity.y < 0.0
-									&& collision.0 {
-										rigidbody2d.velocity.y = 0.0;
-										transform.position.y = tile_transform.position.y + tile_collider.size.y - collider.offset.y + tile_collider.offset.y;
-										if rigidbody2d.gravity.y < 0.0 {
-											rigidbody2d.grounded = rigidbody2d.grounded_time;
-										}
-									}
-									if rigidbody2d.velocity.y > 0.0
-									&& collision.1 {
-										rigidbody2d.velocity.y = 0.0;
-										transform.position.y = tile_transform.position.y - collider.size.y - collider.offset.y + tile_collider.offset.y;
-										if rigidbody2d.gravity.y > 0.0 {
-											rigidbody2d.grounded = rigidbody2d.grounded_time;
-										}
+			for (_map_entity, map) in &mut world.query::<&Map>() {
+				let mut tile_transform = Transform::default();
+				let mut tile_collider;
+				let mut collision = (true, true, true, true);
+				let mut tile_pos = vec2(transform.position.y / map.tile_size as f32, transform.position.y / map.tile_size as f32 - 10.0);
+				tile_pos.y = clamp_f32(0.0, tile_pos.y, map.tiles.len() as f32);
+				tile_pos.x = clamp_f32(0.0, tile_pos.x, map.tiles[0].len() as f32);
+				for y in (tile_pos.y - 10.0) as usize..(tile_pos.y - 10.0) as usize {
+					for x in (tile_pos.x - 10.0) as usize..(tile_pos.x - 10.0) as usize {
+						if map.tiles[y][x] != 0
+						&& !map.ignore_collision.contains(&map.tiles[y][x]) {
+							tile_transform.position = vec3(x as f32 * map.tile_size as f32, y as f32 * map.tile_size as f32, 0.0);
+							tile_collider = match map.special_collisions.get(&map.tiles[y][x]) {
+								Some((collider, up_collision, down_collision, left_collision, right_collision)) => {
+									collision = (*up_collision, *down_collision, *left_collision, *right_collision);
+									*collider
+								},
+								None => BoxCollider2D {
+									size: vec2(map.tile_size as f32, map.tile_size as f32),
+									offset: Vec2::ZERO,
+								},
+							};
+							if collider.overlaps(transform, &tile_collider, &tile_transform) {
+								if rigidbody2d.velocity.y < 0.0
+								&& collision.0 {
+									rigidbody2d.velocity.y = 0.0;
+									transform.position.y = tile_transform.position.y + tile_collider.size.y - collider.offset.y + tile_collider.offset.y;
+									if rigidbody2d.gravity.y < 0.0 {
+										rigidbody2d.grounded = rigidbody2d.grounded_time;
 									}
 								}
-								collision = (true, true, true, true);
+								if rigidbody2d.velocity.y > 0.0
+								&& collision.1 {
+									rigidbody2d.velocity.y = 0.0;
+									transform.position.y = tile_transform.position.y - collider.size.y - collider.offset.y + tile_collider.offset.y;
+									if rigidbody2d.gravity.y > 0.0 {
+										rigidbody2d.grounded = rigidbody2d.grounded_time;
+									}
+								}
 							}
+							collision = (true, true, true, true);
 						}
 					}
 				}
@@ -137,7 +140,7 @@ pub fn animator_update_system(world: &mut World) {
 }
 
 pub fn particle_update_system(world: &mut World) {
-	let mut to_spawn: Vec<(Transform, Rigidbody2D, Dynamic, Particle, Texture)> = Vec::new();
+	let mut to_spawn: Vec<(Transform, Rigidbody2D, Particle, Texture)> = Vec::new();
 	for (_entity, (transform, particle_spawner)) in &mut world.query::<(&Transform, &mut ParticleSpawner)>() {
 		particle_spawner.spawn_timer -= delta_time();
 		if particle_spawner.spawn_timer <= 0.0 {
@@ -154,7 +157,6 @@ pub fn particle_update_system(world: &mut World) {
 					gravity: particle_spawner.gravity,
 					..Default::default()
 				},
-				Dynamic,
 				Particle {
 					life: particle_spawner.life,
 				},
@@ -212,13 +214,26 @@ pub fn follow_update_system(world: &mut World) {
 	}
 }
 
-pub fn texture_render_system(world: &mut World, layer: &'static str) {
-	for (_entity, (transform, texture)) in &mut world.query::<(&Transform, &Texture)>() {
+pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
+	for (entity, (transform, texture)) in &mut world.query::<(&Transform, &Texture)>() {
 		if texture.render_layer == layer {
+			let x_pos = transform.position.x - texture.source.w * transform.scale.x / 2.0 + texture.source.w / 2.0;
+			let mut y_pos = transform.position.y - texture.source.h * transform.scale.y / 2.0 + texture.source.h / 2.0;
+			if let Ok(sin_wave) = world.get::<SinWave>(entity) {
+				y_pos += sin_wave.value as f32;
+			}
+
+			if x_pos + texture.source.w * transform.scale.x < camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+			|| x_pos > camera_pos.x + SCREEN_WIDTH as f32 / 2.0
+			|| y_pos + texture.source.h * transform.scale.y < camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+			|| y_pos > camera_pos.y + SCREEN_HEIGHT as f32 / 2.0 {
+				continue;
+			}
+
 			draw_texture_ex(
 				texture.texture,
-				transform.position.x.round() - texture.source.w * transform.scale.x / 2.0 + texture.source.w / 2.0,
-				transform.position.y.round() - texture.source.h * transform.scale.y / 2.0 + texture.source.h / 2.0,
+				x_pos.round(),
+				y_pos.round(),
 				texture.color,
 				DrawTextureParams {
 					dest_size: Some(vec2(texture.source.w * transform.scale.x, texture.source.h * transform.scale.y)),

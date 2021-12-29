@@ -33,16 +33,17 @@ impl Master {
 
 	pub fn update(&mut self, world: &mut World) {
 		self.time_since_start = get_time();
-		rigidbody2d_update_system(world);
+		rigidbody2d_update_system(world, self.camera_pos);
 		animator_update_system(world);
 		particle_update_system(world);
 		camera_update_system(world, self);
 		follow_update_system(world);
+		sin_wave_update_system(world, self);
 	}
 
 	pub fn render(&mut self, world: &mut World) {
 		for layer in self.render_order.iter() {
-			texture_render_system(world, layer);
+			texture_render_system(world, self.camera_pos, layer);
 			map_render_system(world, self.camera_pos, layer);
 			text_render_system(world, layer);
 		}

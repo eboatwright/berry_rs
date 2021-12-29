@@ -40,8 +40,7 @@ impl BoxCollider2D {
 	}
 }
 
-pub struct Dynamic;
-pub struct CollideWithMap;
+pub struct Static;
 
 #[derive(Default)]
 pub struct Rigidbody2D {
