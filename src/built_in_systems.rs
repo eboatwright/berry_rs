@@ -9,7 +9,6 @@ use macroquad::rand::gen_range;
 use hecs::World;
 use hecs::Entity;
 
-// TODO: rigidbody entity collision?
 pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 	for (entity, (transform, rigidbody2d)) in &mut world.query::<(&mut Transform, &mut Rigidbody2D)>().without::<Static>() {
 		rigidbody2d.grounded -= 1.0;
@@ -64,6 +63,25 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 					}
 				}
 			}
+
+			for (_other_entity, (other_transform, other_collider)) in &mut world.query::<(&Transform, &BoxCollider2D)>().without::<Rigidbody2D>() {
+				if collider.overlaps(transform, other_collider, other_transform) {
+					if rigidbody2d.velocity.x < 0.0 {
+						rigidbody2d.velocity.x = 0.0;
+						transform.position.x = other_transform.position.x + other_collider.offset.x - collider.offset.x + other_collider.size.x;
+						if rigidbody2d.gravity.x < 0.0 {
+							rigidbody2d.grounded = rigidbody2d.grounded_time;
+						}
+					}
+					if rigidbody2d.velocity.x > 0.0 {
+						rigidbody2d.velocity.x = 0.0;
+						transform.position.x = other_transform.position.x + other_collider.offset.x - collider.size.x - collider.offset.x;
+						if rigidbody2d.gravity.x > 0.0 {
+							rigidbody2d.grounded = rigidbody2d.grounded_time;
+						}
+					}
+				}
+			}
 		}
 
 		rigidbody2d.velocity.y += rigidbody2d.gravity.y;
@@ -112,6 +130,25 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 								}
 							}
 							collision = (true, true, true, true);
+						}
+					}
+				}
+			}
+
+			for (_other_entity, (other_transform, other_collider)) in &mut world.query::<(&Transform, &BoxCollider2D)>().without::<Rigidbody2D>() {
+				if collider.overlaps(transform, other_collider, other_transform) {
+					if rigidbody2d.velocity.y < 0.0 {
+						rigidbody2d.velocity.y = 0.0;
+						transform.position.y = other_transform.position.y + other_collider.size.y - collider.offset.y + other_collider.offset.y;
+						if rigidbody2d.gravity.y < 0.0 {
+							rigidbody2d.grounded = rigidbody2d.grounded_time;
+						}
+					}
+					if rigidbody2d.velocity.y > 0.0 {
+						rigidbody2d.velocity.y = 0.0;
+						transform.position.y = other_transform.position.y - collider.size.y - collider.offset.y + other_collider.offset.y;
+						if rigidbody2d.gravity.y > 0.0 {
+							rigidbody2d.grounded = rigidbody2d.grounded_time;
 						}
 					}
 				}
