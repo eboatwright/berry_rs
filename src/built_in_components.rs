@@ -1,3 +1,5 @@
+use hecs::World;
+use crate::Master;
 use std::fs;
 use std::collections::HashMap;
 use crate::util::get_file_path;
@@ -47,6 +49,10 @@ pub struct Rigidbody2D {
 	pub gravity: Vec2,
 	pub grounded: f32,
 	pub grounded_time: f32,
+}
+
+pub struct Button {
+	pub function: fn(&mut World, &mut Master),
 }
 
 #[derive(Default)]
@@ -165,6 +171,16 @@ pub struct CameraTarget {
 	pub offset: Vec3,
 }
 
+impl Default for CameraTarget {
+	fn default() -> CameraTarget {
+		CameraTarget {
+			smoothing: 1.0,
+			offset: Vec3::ZERO,
+		}
+	}
+}
+
+#[derive(Default)]
 pub struct FollowCamera {
 	pub offset: Vec3,
 }
@@ -178,7 +194,7 @@ pub struct Texture {
 	pub render_layer: &'static str,
 	pub texture: Texture2D,
 	pub color: Color,
-	pub source: Rect,
+	pub source: Option<Rect>,
 }
 
 impl Default for Texture {
@@ -187,7 +203,16 @@ impl Default for Texture {
 			render_layer: "default",
 			texture: Texture2D::empty(),
 			color: WHITE,
-			source: Rect::default(),
+			source: None,
+		}
+	}
+}
+
+impl Texture {
+	pub fn size(&self) -> Vec2 {
+		match &self.source {
+			Some(rect) => rect.size(),
+			None => vec2(self.texture.width(), self.texture.height()),
 		}
 	}
 }

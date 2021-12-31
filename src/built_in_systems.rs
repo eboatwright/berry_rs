@@ -1,3 +1,4 @@
+use crate::util::get_mouse_position;
 use crate::util::clamp_f32;
 use crate::SCREEN_WIDTH;
 use crate::SCREEN_HEIGHT;
@@ -157,6 +158,28 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 	}
 }
 
+pub fn button_update_system(world: &mut World, master: &mut Master) {
+	let mut functions: Vec<fn(&mut World, &mut Master)> = Vec::new();
+	for (_entity, (transform, collider, button)) in &mut world.query::<(&Transform, &BoxCollider2D, &Button)>() {
+		let mouse_transform = Transform {
+			position: get_mouse_position(master).extend(0.0),
+			..Default::default()
+		};
+		let mouse_collider = BoxCollider2D {
+			size: vec2(3.0, 3.0),
+			offset: Vec2::ZERO,
+		};
+		if mouse_collider.overlaps(&mouse_transform, collider, transform) {
+			if is_mouse_button_pressed(MouseButton::Left) {
+				functions.push(button.function);
+			}
+		}
+	}
+	for function in functions {
+		function(world, master);
+	}
+}
+
 pub fn animator_update_system(world: &mut World) {
 	for (entity, animator) in &mut world.query::<&mut Animator>() {
 		animator.animation_timer -= 1.0;
@@ -169,7 +192,11 @@ pub fn animator_update_system(world: &mut World) {
 			}
 			if let Ok(_animate_texture) = world.get::<AnimateTexture>(entity) {
 				if let Ok(mut texture) = world.get_mut::<Texture>(entity) {
-					texture.source.x = animator.current_frame() as f32 * texture.source.w;
+					let source = texture.source.unwrap();
+					texture.source = Some(Rect {
+						x: animator.current_frame() as f32 * texture.size().x,
+						..source
+					});
 				}
 			}
 		}
@@ -199,12 +226,12 @@ pub fn particle_update_system(world: &mut World) {
 				},
 				Texture {
 					texture: particle_spawner.texture,
-					source: Rect {
+					source: Some(Rect {
 						x: 0.0,
 						y: 0.0,
 						w: particle_spawner.texture.height(),
 						h: particle_spawner.texture.height(),
-					},
+					}),
 					..Default::default()
 				},
 			));
@@ -254,15 +281,15 @@ pub fn follow_update_system(world: &mut World) {
 pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
 	for (entity, (transform, texture)) in &mut world.query::<(&Transform, &Texture)>() {
 		if texture.render_layer == layer {
-			let x_pos = transform.position.x - texture.source.w * transform.scale.x / 2.0 + texture.source.w / 2.0;
-			let mut y_pos = transform.position.y - texture.source.h * transform.scale.y / 2.0 + texture.source.h / 2.0;
+			let x_pos = transform.position.x - texture.size().x * transform.scale.x / 2.0 + texture.size().x / 2.0;
+			let mut y_pos = transform.position.y - texture.size().y * transform.scale.y / 2.0 + texture.size().y / 2.0;
 			if let Ok(sin_wave) = world.get::<SinWave>(entity) {
 				y_pos += sin_wave.value as f32;
 			}
 
-			if x_pos + texture.source.w * transform.scale.x < camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+			if x_pos + texture.size().x * transform.scale.x < camera_pos.x - SCREEN_WIDTH as f32 / 2.0
 			|| x_pos > camera_pos.x + SCREEN_WIDTH as f32 / 2.0
-			|| y_pos + texture.source.h * transform.scale.y < camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+			|| y_pos + texture.size().y * transform.scale.y < camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
 			|| y_pos > camera_pos.y + SCREEN_HEIGHT as f32 / 2.0 {
 				continue;
 			}
@@ -273,8 +300,8 @@ pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'stati
 				y_pos.round(),
 				texture.color,
 				DrawTextureParams {
-					dest_size: Some(vec2(texture.source.w * transform.scale.x, texture.source.h * transform.scale.y)),
-					source: Some(texture.source),
+					dest_size: Some(vec2(texture.size().x * transform.scale.x, texture.size().y * transform.scale.y)),
+					source: texture.source,
 					rotation: transform.rotation.z,
 					flip_x: false,
 					flip_y: false,
