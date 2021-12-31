@@ -10,7 +10,7 @@ use hecs::World;
 use hecs::Entity;
 
 pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
-	for (entity, (transform, rigidbody2d)) in &mut world.query::<(&mut Transform, &mut Rigidbody2D)>().without::<Static>() {
+	for (entity, (transform, rigidbody2d)) in &mut world.query::<(&mut Transform, &mut Rigidbody2D)>() {
 		rigidbody2d.grounded -= 1.0;
 
 		rigidbody2d.velocity.x += rigidbody2d.gravity.x;

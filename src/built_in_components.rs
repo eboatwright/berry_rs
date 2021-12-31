@@ -40,8 +40,6 @@ impl BoxCollider2D {
 	}
 }
 
-pub struct Static;
-
 #[derive(Default)]
 pub struct Rigidbody2D {
 	pub velocity: Vec2,
