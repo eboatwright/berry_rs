@@ -4,25 +4,7 @@ use macroquad::audio;
 use macroquad::audio::Sound;
 use crate::Master;
 
-pub fn clamp_f32(min: f32, val: f32, max: f32) -> f32 {
-	if val > max { max }
-	else if val < min { min }
-	else { val }
-}
-
-pub fn clamp_f64(min: f64, val: f64, max: f64) -> f64 {
-	if val > max { max }
-	else if val < min { min }
-	else { val }
-}
-
-pub fn clamp_i32(min: i32, val: i32, max: i32) -> i32 {
-	if val > max { max }
-	else if val < min { min }
-	else { val }
-}
-
-pub fn clamp_usize(min: usize, val: usize, max: usize) -> usize {
+pub fn clamp_range<T: std::cmp::PartialOrd>(min: T, val: T, max: T) -> T {
 	if val > max { max }
 	else if val < min { min }
 	else { val }

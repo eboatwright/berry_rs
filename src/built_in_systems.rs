@@ -1,5 +1,5 @@
 use crate::util::get_mouse_position;
-use crate::util::clamp_f32;
+use crate::util::clamp_range;
 use crate::SCREEN_WIDTH;
 use crate::SCREEN_HEIGHT;
 use crate::util::delta_time;
@@ -12,11 +12,11 @@ use hecs::Entity;
 
 pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 	for (entity, (transform, rigidbody2d)) in &mut world.query::<(&mut Transform, &mut Rigidbody2D)>() {
-		rigidbody2d.grounded -= 1.0;
+		rigidbody2d.grounded -= delta_time();
 
 		rigidbody2d.velocity.x += rigidbody2d.gravity.x;
-		rigidbody2d.velocity.x *= 1.0 - rigidbody2d.friction.x;
-		transform.position.x += rigidbody2d.velocity.x;
+		rigidbody2d.velocity.x *= (1.0 - rigidbody2d.friction.x) * delta_time();
+		transform.position.x += rigidbody2d.velocity.x * delta_time();
 
 		if let Ok(collider) = world.get::<BoxCollider2D>(entity) {
 			for (_map_entity, map) in &mut world.query::<&Map>() {
@@ -24,8 +24,8 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 				let mut tile_collider;
 				let mut collision = (true, true, true, true);
 				let mut tile_pos = vec2(transform.position.y / map.tile_size as f32, transform.position.y / map.tile_size as f32 - 10.0);
-				tile_pos.y = clamp_f32(0.0, tile_pos.y, map.tiles.len() as f32);
-				tile_pos.x = clamp_f32(0.0, tile_pos.x, map.tiles[0].len() as f32);
+				tile_pos.y = clamp_range(0.0, tile_pos.y, map.tiles.len() as f32);
+				tile_pos.x = clamp_range(0.0, tile_pos.x, map.tiles[0].len() as f32);
 				for y in (tile_pos.y - 10.0) as usize..(tile_pos.y - 10.0) as usize {
 					for x in (tile_pos.x - 10.0) as usize..(tile_pos.x - 10.0) as usize {
 						if map.tiles[y][x] != 0
@@ -86,8 +86,8 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 		}
 
 		rigidbody2d.velocity.y += rigidbody2d.gravity.y;
-		rigidbody2d.velocity.y *= 1.0 - rigidbody2d.friction.y;
-		transform.position.y += rigidbody2d.velocity.y;
+		rigidbody2d.velocity.y *= (1.0 - rigidbody2d.friction.y) * delta_time();
+		transform.position.y += rigidbody2d.velocity.y * delta_time();
 
 		if let Ok(collider) = world.get::<BoxCollider2D>(entity) {
 			for (_map_entity, map) in &mut world.query::<&Map>() {
@@ -95,8 +95,8 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 				let mut tile_collider;
 				let mut collision = (true, true, true, true);
 				let mut tile_pos = vec2(transform.position.y / map.tile_size as f32, transform.position.y / map.tile_size as f32 - 10.0);
-				tile_pos.y = clamp_f32(0.0, tile_pos.y, map.tiles.len() as f32);
-				tile_pos.x = clamp_f32(0.0, tile_pos.x, map.tiles[0].len() as f32);
+				tile_pos.y = clamp_range(0.0, tile_pos.y, map.tiles.len() as f32);
+				tile_pos.x = clamp_range(0.0, tile_pos.x, map.tiles[0].len() as f32);
 				for y in (tile_pos.y - 10.0) as usize..(tile_pos.y - 10.0) as usize {
 					for x in (tile_pos.x - 10.0) as usize..(tile_pos.x - 10.0) as usize {
 						if map.tiles[y][x] != 0
@@ -182,7 +182,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 
 pub fn animator_update_system(world: &mut World) {
 	for (entity, animator) in &mut world.query::<&mut Animator>() {
-		animator.animation_timer -= 1.0;
+		animator.animation_timer -= delta_time();
 		if animator.animation_timer <= 0.0 {
 			animator.animation_timer = animator.current_animation.frame_duration;
 			animator.animation_frame_index += 1;
