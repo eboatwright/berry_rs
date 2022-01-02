@@ -80,8 +80,6 @@ impl Animation {
 	}
 }
 
-pub struct AnimateTexture;
-
 #[derive(Default)]
 pub struct Animator {
 	pub animation_timer: f32,
@@ -194,7 +192,7 @@ pub struct Texture {
 	pub render_layer: &'static str,
 	pub texture: Texture2D,
 	pub color: Color,
-	pub source: Option<Rect>,
+	pub source: Rect,
 }
 
 impl Default for Texture {
@@ -203,16 +201,17 @@ impl Default for Texture {
 			render_layer: "default",
 			texture: Texture2D::empty(),
 			color: WHITE,
-			source: None,
+			source: Rect::default(),
 		}
 	}
 }
 
 impl Texture {
 	pub fn size(&self) -> Vec2 {
-		match &self.source {
-			Some(rect) => rect.size(),
-			None => vec2(self.texture.width(), self.texture.height()),
+		if self.source == Rect::default() {
+			vec2(self.texture.width(), self.texture.height())
+		} else {
+			self.source.size()
 		}
 	}
 }

@@ -1,3 +1,6 @@
+use ::rand::thread_rng;
+use ::rand::Rng;
+use crate::rand::gen_range;
 use crate::util::get_mouse_position;
 use crate::util::clamp_range;
 use crate::SCREEN_WIDTH;
@@ -6,7 +9,6 @@ use crate::util::delta_time;
 use crate::Master;
 use crate::built_in_components::*;
 use macroquad::prelude::*;
-use macroquad::rand::gen_range;
 use hecs::World;
 use hecs::Entity;
 
@@ -15,7 +17,7 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 		rigidbody2d.grounded -= delta_time();
 
 		rigidbody2d.velocity.x += rigidbody2d.gravity.x;
-		rigidbody2d.velocity.x *= (1.0 - rigidbody2d.friction.x) * delta_time();
+		rigidbody2d.velocity.x *= 1.0 - rigidbody2d.friction.x;
 		transform.position.x += rigidbody2d.velocity.x * delta_time();
 
 		if let Ok(collider) = world.get::<BoxCollider2D>(entity) {
@@ -86,7 +88,7 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 		}
 
 		rigidbody2d.velocity.y += rigidbody2d.gravity.y;
-		rigidbody2d.velocity.y *= (1.0 - rigidbody2d.friction.y) * delta_time();
+		rigidbody2d.velocity.y *= 1.0 - rigidbody2d.friction.y;
 		transform.position.y += rigidbody2d.velocity.y * delta_time();
 
 		if let Ok(collider) = world.get::<BoxCollider2D>(entity) {
@@ -190,14 +192,8 @@ pub fn animator_update_system(world: &mut World) {
 				animator.animation_frame_index = 0;
 				animator.dont_interrupt = false;
 			}
-			if let Ok(_animate_texture) = world.get::<AnimateTexture>(entity) {
-				if let Ok(mut texture) = world.get_mut::<Texture>(entity) {
-					let source = texture.source.unwrap();
-					texture.source = Some(Rect {
-						x: animator.current_frame() as f32 * texture.size().x,
-						..source
-					});
-				}
+			if let Ok(mut texture) = world.get_mut::<Texture>(entity) {
+				texture.source.x = animator.current_frame() as f32 * texture.size().x;
 			}
 		}
 	}
@@ -205,6 +201,7 @@ pub fn animator_update_system(world: &mut World) {
 
 pub fn particle_update_system(world: &mut World) {
 	let mut to_spawn: Vec<(Transform, Rigidbody2D, Particle, Texture)> = Vec::new();
+	let mut rng = thread_rng();
 	for (_entity, (transform, particle_spawner)) in &mut world.query::<(&Transform, &mut ParticleSpawner)>() {
 		particle_spawner.spawn_timer -= delta_time();
 		if particle_spawner.spawn_timer <= 0.0 {
@@ -216,7 +213,7 @@ pub fn particle_update_system(world: &mut World) {
 					rotation: Vec3::ZERO,
 				},
 				Rigidbody2D {
-					velocity: vec2(gen_range(particle_spawner.min_velocity.x, particle_spawner.max_velocity.x), gen_range(particle_spawner.min_velocity.y, particle_spawner.max_velocity.y)),
+					velocity: vec2(rng.gen_range(particle_spawner.min_velocity.x..particle_spawner.max_velocity.x), rng.gen_range(particle_spawner.min_velocity.y..particle_spawner.max_velocity.y)),
 					friction: particle_spawner.friction,
 					gravity: particle_spawner.gravity,
 					..Default::default()
@@ -226,12 +223,6 @@ pub fn particle_update_system(world: &mut World) {
 				},
 				Texture {
 					texture: particle_spawner.texture,
-					source: Some(Rect {
-						x: 0.0,
-						y: 0.0,
-						w: particle_spawner.texture.height(),
-						h: particle_spawner.texture.height(),
-					}),
 					..Default::default()
 				},
 			));
@@ -301,7 +292,16 @@ pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'stati
 				texture.color,
 				DrawTextureParams {
 					dest_size: Some(vec2(texture.size().x * transform.scale.x, texture.size().y * transform.scale.y)),
-					source: texture.source,
+					source: Some(if texture.source == Rect::default() {
+						 Rect {
+							x: 0.0,
+							y: 0.0,
+							w: texture.size().x,
+							h: texture.size().y,
+						}
+					} else {
+						texture.source
+					}),
 					rotation: transform.rotation.z,
 					flip_x: false,
 					flip_y: false,

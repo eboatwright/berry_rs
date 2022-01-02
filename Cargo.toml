@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 macroquad = { git = "https://github.com/not-fl3/macroquad", rev = "3ad40bc" }
 hecs = { git = "https://github.com/Ralith/hecs", rev = "64c2ca5" }
+rand = "0.8.4"
