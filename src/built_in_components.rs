@@ -80,6 +80,8 @@ impl Animation {
 	}
 }
 
+pub struct DontAnimateTexture;
+
 #[derive(Default)]
 pub struct Animator {
 	pub animation_timer: f32,
