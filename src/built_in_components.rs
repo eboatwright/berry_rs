@@ -108,16 +108,15 @@ pub struct Animator {
 
 impl Animator {
 	pub fn change_animation(&mut self, animation_id: &'static str) {
-		if !self.dont_interrupt {
-			if animation_id != self.current_animation.id {
-				for animation in self.animations.iter() {
-					if animation.id == animation_id {
-						self.current_animation = animation.copy();
-						self.animation_timer = 0.0;
-						self.animation_frame_index = 0;
+		if !self.dont_interrupt
+		&& animation_id != self.current_animation.id {
+			for animation in self.animations.iter() {
+				if animation.id == animation_id {
+					self.current_animation = animation.copy();
+					self.animation_timer = 0.0;
+					self.animation_frame_index = 0;
 
-						return;
-					}
+					return;
 				}
 			}
 		}
