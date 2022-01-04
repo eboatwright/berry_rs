@@ -1,6 +1,5 @@
 use ::rand::thread_rng;
 use ::rand::Rng;
-use crate::rand::gen_range;
 use crate::util::get_mouse_position;
 use crate::util::clamp_range;
 use crate::SCREEN_WIDTH;
@@ -12,7 +11,7 @@ use macroquad::prelude::*;
 use hecs::World;
 use hecs::Entity;
 
-pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
+pub fn rigidbody2d_update_system(world: &mut World) {
 	for (entity, (transform, rigidbody2d)) in &mut world.query::<(&mut Transform, &mut Rigidbody2D)>() {
 		rigidbody2d.grounded -= delta_time();
 
@@ -162,7 +161,9 @@ pub fn rigidbody2d_update_system(world: &mut World, camera_pos: Vec2) {
 
 pub fn button_update_system(world: &mut World, master: &mut Master) {
 	let mut functions: Vec<fn(&mut World, &mut Master)> = Vec::new();
-	for (_entity, (transform, collider, button)) in &mut world.query::<(&Transform, &BoxCollider2D, &Button)>() {
+	let mut to_add_shadow: Vec<Entity> = Vec::new();
+	let mut to_remove_shadow: Vec<Entity> = Vec::new();
+	for (entity, (transform, collider, button)) in &mut world.query::<(&Transform, &BoxCollider2D, &mut Button)>() {
 		let mouse_transform = Transform {
 			position: get_mouse_position(master).extend(0.0),
 			..Default::default()
@@ -171,14 +172,40 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 			size: vec2(3.0, 3.0),
 			offset: Vec2::ZERO,
 		};
+		
+		let mut target_offset = Vec2::ZERO;
 		if mouse_collider.overlaps(&mouse_transform, collider, transform) {
+			if world.get::<DropShadow>(entity).is_err() {
+				to_add_shadow.push(entity);
+			}
+			target_offset = button.highlight_offset;
 			if is_mouse_button_pressed(MouseButton::Left) {
 				functions.push(button.function);
 			}
+		} else if world.get::<DropShadow>(entity).is_ok() {
+			to_remove_shadow.push(entity);
+		}
+
+		if let Ok(mut render_offset) = world.get_mut::<RenderOffset>(entity) {
+			render_offset.0 = render_offset.0.lerp(target_offset, button.animation_smooth);
 		}
 	}
 	for function in functions {
 		function(world, master);
+	}
+	for entity in to_add_shadow {
+		world.insert_one(entity, DropShadow {
+			color: Color {
+				r: 0.0,
+				g: 0.0,
+				b: 0.0,
+				a: 0.4,
+			},
+			offset: vec2(0.0, 2.0),
+		}).unwrap();
+	}
+	for entity in to_remove_shadow {
+		world.remove_one::<DropShadow>(entity).unwrap();
 	}
 }
 
@@ -192,7 +219,7 @@ pub fn animator_update_system(world: &mut World) {
 				animator.animation_frame_index = 0;
 				animator.dont_interrupt = false;
 			}
-			if let Err(_) = world.get::<DontAnimateTexture>(entity) {
+			if world.get::<DontAnimateTexture>(entity).is_err() {
 				if let Ok(mut texture) = world.get_mut::<Texture>(entity) {
 					texture.source.x = animator.current_frame() as f32 * texture.size().x;
 				}
@@ -210,7 +237,7 @@ pub fn particle_update_system(world: &mut World) {
 			particle_spawner.spawn_timer = particle_spawner.spawn_rate;
 			to_spawn.push((
 				Transform {
-					position: vec3(0.0, 0.0, 0.0),
+					position: vec3(transform.position.x, transform.position.y, 0.0),
 					scale: Vec3::ONE,
 					rotation: Vec3::ZERO,
 				},
@@ -233,7 +260,7 @@ pub fn particle_update_system(world: &mut World) {
 	world.spawn_batch(to_spawn);
 
 	let mut to_destroy: Vec<Entity> = Vec::new();
-	for (entity, (transform, particle)) in &mut world.query::<(&mut Transform, &mut Particle)>() {
+	for (entity, particle) in &mut world.query::<&mut Particle>() {
 		particle.life -= delta_time();
 		if particle.life <= 0.0 {
 			to_destroy.push(entity);
@@ -246,8 +273,11 @@ pub fn particle_update_system(world: &mut World) {
 }
 
 pub fn sin_wave_update_system(world: &mut World, master: &Master) {
-	for (_entity, sin_wave) in &mut world.query::<&mut SinWave>() {
+	for (entity, sin_wave) in &mut world.query::<&mut SinWave>() {
 		sin_wave.value = f64::sin(master.time_since_start * sin_wave.speed + sin_wave.offset) * sin_wave.distance;
+		if let Ok(mut render_offset) = world.get_mut::<RenderOffset>(entity) {
+			render_offset.0.y = sin_wave.value as f32;
+		}
 	}
 }
 
@@ -274,10 +304,12 @@ pub fn follow_update_system(world: &mut World) {
 pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
 	for (entity, (transform, texture)) in &mut world.query::<(&Transform, &Texture)>() {
 		if texture.render_layer == layer {
-			let x_pos = transform.position.x - texture.size().x * transform.scale.x / 2.0 + texture.size().x / 2.0;
+			let mut x_pos = transform.position.x - texture.size().x * transform.scale.x / 2.0 + texture.size().x / 2.0;
 			let mut y_pos = transform.position.y - texture.size().y * transform.scale.y / 2.0 + texture.size().y / 2.0;
-			if let Ok(sin_wave) = world.get::<SinWave>(entity) {
-				y_pos += sin_wave.value as f32;
+
+			if let Ok(render_offset) = world.get::<RenderOffset>(entity) {
+				x_pos += render_offset.0.x;
+				y_pos += render_offset.0.y;
 			}
 
 			if x_pos + texture.size().x * transform.scale.x < camera_pos.x - SCREEN_WIDTH as f32 / 2.0
@@ -285,6 +317,32 @@ pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'stati
 			|| y_pos + texture.size().y * transform.scale.y < camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
 			|| y_pos > camera_pos.y + SCREEN_HEIGHT as f32 / 2.0 {
 				continue;
+			}
+
+			if let Ok(drop_shadow) = world.get::<DropShadow>(entity) {
+				draw_texture_ex(
+					texture.texture,
+					x_pos.round() + drop_shadow.offset.x.round(),
+					y_pos.round() + drop_shadow.offset.y.round(),
+					drop_shadow.color,
+					DrawTextureParams {
+						dest_size: Some(vec2(texture.size().x * transform.scale.x, texture.size().y * transform.scale.y)),
+						source: Some(if texture.source == Rect::default() {
+							 Rect {
+								x: 0.0,
+								y: 0.0,
+								w: texture.size().x,
+								h: texture.size().y,
+							}
+						} else {
+							texture.source
+						}),
+						rotation: transform.rotation.z,
+						flip_x: false,
+						flip_y: false,
+						pivot: None,
+					},
+				);
 			}
 
 			draw_texture_ex(
@@ -354,12 +412,27 @@ pub fn map_render_system(world: &mut World, camera_pos: Vec2, layer: &'static st
 }
 
 pub fn text_render_system(world: &mut World, layer: &'static str) {
-	for (_entity, (transform, text)) in &mut world.query::<(&Transform, &TextRenderer)>() {
+	for (entity, (transform, text)) in &mut world.query::<(&Transform, &TextRenderer)>() {
 		if text.render_layer == layer {
+			let mut offset = Vec2::ZERO;
+			if let Ok(render_offset) = world.get::<RenderOffset>(entity) {
+				offset = render_offset.0;
+			}
+			if let Ok(drop_shadow) = world.get::<DropShadow>(entity) {
+				draw_text_ex(
+					text.text,
+					transform.position.x.round() + drop_shadow.offset.x,
+					(transform.position.y + text.params.font_size as f32 / 1.5 + offset.y).round() + drop_shadow.offset.y,
+					TextParams {
+						color: drop_shadow.color,
+						..text.params
+					},
+				);
+			}
 			draw_text_ex(
 				text.text,
-				transform.position.x.round(),
-				transform.position.y.round(),
+				transform.position.x.round() + offset.x,
+				(transform.position.y + text.params.font_size as f32 / 1.5 + offset.y).round(),
 				text.params,
 			);
 		}

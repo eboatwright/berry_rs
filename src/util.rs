@@ -14,7 +14,7 @@ pub fn delta_time() -> f32 { get_frame_time() * 60.0 }
 
 pub fn get_file_path(path: String) -> String {
 	return if cfg!(wasm32_unknown_unknown) {
-		path.to_string()
+		path
 	} else {
 		let mut full_path = env::current_exe().unwrap();
 		full_path.pop();

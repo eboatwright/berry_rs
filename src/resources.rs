@@ -2,7 +2,7 @@ pub struct Resources {
 }
 
 impl Resources {
-	pub fn empty() -> Resources {
+	pub fn new() -> Resources {
 		Resources {
 		}
 	}

@@ -1,8 +1,10 @@
-use crate::resources::Resources;
 use crate::built_in_components::*;
 use crate::built_in_systems::*;
 use crate::util::load_texture_file;
 use crate::util::load_sound_file;
+use crate::util::load_font_file;
+use crate::util::delta_time;
+use crate::resources::Resources;
 use macroquad::prelude::*;
 use hecs::World;
 
@@ -21,9 +23,10 @@ impl Master {
 			camera_pos: Vec2::ZERO,
 			render_order: vec![
 				"default",
+				"ui",
 			],
 			zoom: 1.0,
-			resources: Resources::empty(),
+			resources: Resources::new(),
 		}
 	}
 
@@ -33,7 +36,7 @@ impl Master {
 
 	pub fn update(&mut self, world: &mut World) {
 		self.time_since_start = get_time();
-		rigidbody2d_update_system(world, self.camera_pos);
+		rigidbody2d_update_system(world);
 		animator_update_system(world);
 		particle_update_system(world);
 		camera_update_system(world, self);

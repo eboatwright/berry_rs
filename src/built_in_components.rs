@@ -53,6 +53,21 @@ pub struct Rigidbody2D {
 
 pub struct Button {
 	pub function: fn(&mut World, &mut Master),
+	pub hovering_over: bool,
+	pub highlight_offset: Vec2,
+	pub animation_smooth: f32,
+}
+
+impl Default for Button {
+	fn default() -> Button {
+		Button {
+			function: | _world, _master | {
+			},
+			hovering_over: false,
+			highlight_offset: vec2(0.0, -4.0),
+			animation_smooth: 0.2,
+		}
+	}
 }
 
 #[derive(Default)]
@@ -189,6 +204,28 @@ pub struct Follow {
 	pub id: u32,
 	pub offset: Vec3,
 }
+
+pub struct DropShadow {
+	pub color: Color,
+	pub offset: Vec2,
+}
+
+impl Default for DropShadow {
+	fn default() -> DropShadow {
+		DropShadow {
+			color: Color {
+				r: 0.0,
+				g: 0.0,
+				b: 0.0,
+				a: 0.1,
+			},
+			offset: vec2(5.0, 5.0),
+		}
+	}
+}
+
+#[derive(Default)]
+pub struct RenderOffset(pub Vec2);
 
 pub struct Texture {
 	pub render_layer: &'static str,
