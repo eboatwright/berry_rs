@@ -8,6 +8,8 @@ mod master;
 mod resources;
 mod util;
 
+mod empty_scene;
+
 use crate::master::Master;
 use macroquad::prelude::*;
 use hecs::World;
@@ -30,9 +32,11 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut master = Master::new();
-    let mut world = World::new();
     master.resources.load().await;
+    let mut world = World::new();
+
     master.load_empty_scene(&mut world);
+
     loop {
         master.update(&mut world);
 

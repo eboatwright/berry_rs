@@ -1,3 +1,4 @@
+use macroquad::audio::Sound;
 use hecs::World;
 use crate::Master;
 use std::fs;
@@ -56,6 +57,8 @@ pub struct Button {
 	pub hovering_over: bool,
 	pub highlight_offset: Vec2,
 	pub animation_smooth: f32,
+	pub select_sfx: Option<Sound>,
+	pub selected: bool,
 }
 
 impl Default for Button {
@@ -66,6 +69,8 @@ impl Default for Button {
 			hovering_over: false,
 			highlight_offset: vec2(0.0, -4.0),
 			animation_smooth: 0.2,
+			select_sfx: None,
+			selected: false,
 		}
 	}
 }

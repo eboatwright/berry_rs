@@ -1,10 +1,6 @@
+use crate::resources::Resources;
 use crate::built_in_components::*;
 use crate::built_in_systems::*;
-use crate::util::load_texture_file;
-use crate::util::load_sound_file;
-use crate::util::load_font_file;
-use crate::util::delta_time;
-use crate::resources::Resources;
 use macroquad::prelude::*;
 use hecs::World;
 
@@ -28,10 +24,6 @@ impl Master {
 			zoom: 1.0,
 			resources: Resources::new(),
 		}
-	}
-
-	pub fn load_empty_scene(&mut self, world: &mut World) {
-		*world = World::new();
 	}
 
 	pub fn update(&mut self, world: &mut World) {

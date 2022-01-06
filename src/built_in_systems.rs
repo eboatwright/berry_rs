@@ -175,6 +175,10 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 		
 		let mut target_offset = Vec2::ZERO;
 		if mouse_collider.overlaps(&mouse_transform, collider, transform) {
+			if !button.selected {
+				button.selected = true;
+				master.resources.play_sound(button.select_sfx, false, 1.0);
+			}
 			if world.get::<DropShadow>(entity).is_err() {
 				to_add_shadow.push(entity);
 			}
@@ -182,8 +186,11 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 			if is_mouse_button_pressed(MouseButton::Left) {
 				functions.push(button.function);
 			}
-		} else if world.get::<DropShadow>(entity).is_ok() {
-			to_remove_shadow.push(entity);
+		} else {
+			button.selected = false;
+			if world.get::<DropShadow>(entity).is_ok() {
+				to_remove_shadow.push(entity);
+			}
 		}
 
 		if let Ok(mut render_offset) = world.get_mut::<RenderOffset>(entity) {
