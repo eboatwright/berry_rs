@@ -179,6 +179,27 @@ pub struct ParticleSpawner {
 	pub gravity: Vec2,
 	pub friction: Vec2,
 	pub texture: Texture2D,
+	pub color: Color,
+	pub min_spawn_offset: Vec2,
+	pub max_spawn_offset: Vec2,
+}
+
+impl Default for ParticleSpawner {
+	fn default() -> ParticleSpawner {
+		ParticleSpawner {
+			life: 60.0,
+			spawn_rate: 10.0,
+			spawn_timer: 0.0,
+			min_velocity: vec2(-1.0, -1.0),
+			max_velocity: vec2(1.0, 1.0),
+			gravity: Vec2::ZERO,
+			friction: Vec2::ZERO,
+			texture: Texture2D::empty(),
+			color: WHITE,
+			min_spawn_offset: Vec2::ZERO,
+			max_spawn_offset: Vec2::ZERO,
+		}
+	}
 }
 
 pub struct Particle {

@@ -244,7 +244,7 @@ pub fn particle_update_system(world: &mut World) {
 			particle_spawner.spawn_timer = particle_spawner.spawn_rate;
 			to_spawn.push((
 				Transform {
-					position: vec3(transform.position.x, transform.position.y, 0.0),
+					position: vec3(transform.position.x + rng.gen_range(particle_spawner.min_spawn_offset.x..particle_spawner.max_spawn_offset.x), transform.position.y + rng.gen_range(particle_spawner.min_spawn_offset.y..particle_spawner.max_spawn_offset.y), 0.0),
 					scale: Vec3::ONE,
 					rotation: Vec3::ZERO,
 				},
@@ -258,7 +258,9 @@ pub fn particle_update_system(world: &mut World) {
 					life: particle_spawner.life,
 				},
 				Texture {
+					render_layer: "object_over_player",
 					texture: particle_spawner.texture,
+					color: particle_spawner.color,
 					..Default::default()
 				},
 			));
