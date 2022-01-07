@@ -161,8 +161,7 @@ pub fn rigidbody2d_update_system(world: &mut World) {
 
 pub fn button_update_system(world: &mut World, master: &mut Master) {
 	let mut functions: Vec<fn(&mut World, &mut Master)> = Vec::new();
-	let mut to_add_shadow: Vec<Entity> = Vec::new();
-	let mut to_remove_shadow: Vec<Entity> = Vec::new();
+	let mut to_update_shadow: Vec<(bool, Entity)> = Vec::new();
 	for (entity, (transform, collider, button)) in &mut world.query::<(&Transform, &BoxCollider2D, &mut Button)>() {
 		let mouse_transform = Transform {
 			position: get_mouse_position(master).extend(0.0),
@@ -180,7 +179,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 				master.resources.play_sound(button.select_sfx, false, 1.0);
 			}
 			if world.get::<DropShadow>(entity).is_err() {
-				to_add_shadow.push(entity);
+				to_update_shadow.push((true, entity));
 			}
 			target_offset = button.highlight_offset;
 			if is_mouse_button_pressed(MouseButton::Left) {
@@ -189,7 +188,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 		} else {
 			button.selected = false;
 			if world.get::<DropShadow>(entity).is_ok() {
-				to_remove_shadow.push(entity);
+				to_update_shadow.push((false, entity));
 			}
 		}
 
@@ -200,19 +199,20 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 	for function in functions {
 		function(world, master);
 	}
-	for entity in to_add_shadow {
-		world.insert_one(entity, DropShadow {
-			color: Color {
-				r: 0.0,
-				g: 0.0,
-				b: 0.0,
-				a: 0.4,
-			},
-			offset: vec2(0.0, 2.0),
-		}).unwrap();
-	}
-	for entity in to_remove_shadow {
-		world.remove_one::<DropShadow>(entity).unwrap();
+	for entity in to_update_shadow {
+		if entity.0 {
+			world.insert_one(entity.1, DropShadow {
+				color: Color {
+					r: 0.0,
+					g: 0.0,
+					b: 0.0,
+					a: 0.4,
+				},
+				offset: vec2(0.0, 2.0),
+			}).unwrap();
+		} else {
+			world.remove_one::<DropShadow>(entity.1).unwrap();
+		}
 	}
 }
 
@@ -258,7 +258,7 @@ pub fn particle_update_system(world: &mut World) {
 					life: particle_spawner.life,
 				},
 				Texture {
-					render_layer: "object_over_player",
+					render_layer: "particle",
 					texture: particle_spawner.texture,
 					color: particle_spawner.color,
 					..Default::default()

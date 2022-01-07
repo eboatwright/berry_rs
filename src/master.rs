@@ -19,6 +19,7 @@ impl Master {
 			camera_pos: Vec2::ZERO,
 			render_order: vec![
 				"default",
+				"particle",
 				"ui",
 			],
 			zoom: 1.0,
