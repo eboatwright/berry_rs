@@ -39,11 +39,11 @@ pub fn get_mouse_position(master: &Master) -> Vec2 {
 	let mut mouse_pos = mouse_position();
 	mouse_pos.0 -= screen_width() / 2.0;
 	mouse_pos.0 /= master.zoom;
-	mouse_pos.0 += master.camera.x;
+	mouse_pos.0 += master.camera_pos.x;
 
 	mouse_pos.1 -= screen_height() / 2.0;
 	mouse_pos.1 /= master.zoom;
-	mouse_pos.1 += master.camera.y;
+	mouse_pos.1 += master.camera_pos.y;
 
 	vec2(mouse_pos.0, mouse_pos.1)
 }

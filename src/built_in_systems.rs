@@ -292,11 +292,11 @@ pub fn sin_wave_update_system(world: &mut World, master: &Master) {
 
 pub fn camera_update_system(world: &mut World, master: &mut Master) {
 	for (_entity, (transform, camera_target)) in &mut world.query::<(&Transform, &CameraTarget)>() {
-		master.camera.move_to(master.camera.point().lerp((transform.position + camera_target.offset).truncate(), camera_target.smoothing).round());
+		master.camera_pos = master.camera_pos.lerp((transform.position + camera_target.offset).truncate(), camera_target.smoothing).round();
 	}
 
 	for (_entity, (transform, follow_camera)) in &mut world.query::<(&mut Transform, &FollowCamera)>() {
-		transform.position = (master.camera.point().extend(0.0) + follow_camera.offset).round();
+		transform.position = (master.camera_pos.extend(0.0) + follow_camera.offset).round();
 	}
 }
 
@@ -310,7 +310,7 @@ pub fn follow_update_system(world: &mut World) {
 	}
 }
 
-pub fn texture_render_system(world: &mut World, camera: Rect, layer: &'static str) {
+pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
 	for (entity, (transform, texture)) in &mut world.query::<(&Transform, &Texture)>() {
 		if texture.render_layer == layer {
 			let mut x_pos = transform.position.x - texture.size().x * transform.scale.x / 2.0 + texture.size().x / 2.0;
@@ -321,10 +321,10 @@ pub fn texture_render_system(world: &mut World, camera: Rect, layer: &'static st
 				y_pos += render_offset.0.y;
 			}
 
-			if x_pos + texture.size().x * transform.scale.x < camera.x - SCREEN_WIDTH as f32 / 2.0
-			|| x_pos > camera.x + SCREEN_WIDTH as f32 / 2.0
-			|| y_pos + texture.size().y * transform.scale.y < camera.y - SCREEN_HEIGHT as f32 / 2.0
-			|| y_pos > camera.y + SCREEN_HEIGHT as f32 / 2.0 {
+			if x_pos + texture.size().x * transform.scale.x < camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+			|| x_pos > camera_pos.x + SCREEN_WIDTH as f32 / 2.0
+			|| y_pos + texture.size().y * transform.scale.y < camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+			|| y_pos > camera_pos.y + SCREEN_HEIGHT as f32 / 2.0 {
 				continue;
 			}
 
@@ -381,16 +381,16 @@ pub fn texture_render_system(world: &mut World, camera: Rect, layer: &'static st
 	}
 }
 
-pub fn map_render_system(world: &mut World, camera: Rect, layer: &'static str) {
+pub fn map_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
 	for (_entity, (map, texture)) in &mut world.query::<(&Map, &Texture)>() {
 		if texture.render_layer == layer {
 			for y in 0..map.tiles.len() {
 				for x in 0..map.tiles[0].len() {
 					if map.tiles[y][x] != 0
-					&& (y as f32 + 1.0) * (map.tile_size as f32) > camera.y - SCREEN_HEIGHT as f32 / 2.0
-					&& (y as f32) * (map.tile_size as f32) < camera.y + SCREEN_HEIGHT as f32 / 2.0
-					&& (x as f32 + 1.0) * (map.tile_size as f32) > camera.x - SCREEN_WIDTH as f32 / 2.0
-					&& (x as f32) * (map.tile_size as f32) < camera.x + SCREEN_WIDTH as f32 / 2.0 {
+					&& (y as f32 + 1.0) * (map.tile_size as f32) > camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+					&& (y as f32) * (map.tile_size as f32) < camera_pos.y + SCREEN_HEIGHT as f32 / 2.0
+					&& (x as f32 + 1.0) * (map.tile_size as f32) > camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+					&& (x as f32) * (map.tile_size as f32) < camera_pos.x + SCREEN_WIDTH as f32 / 2.0 {
 						draw_texture_ex(
 							texture.texture,
 							x as f32 * map.tile_size as f32,
