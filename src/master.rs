@@ -1,3 +1,5 @@
+use crate::SCREEN_HEIGHT;
+use crate::SCREEN_WIDTH;
 use crate::resources::Resources;
 use crate::built_in_components::*;
 use crate::built_in_systems::*;
@@ -6,7 +8,7 @@ use hecs::World;
 
 pub struct Master {
 	pub time_since_start: f64,
-	pub camera_pos: Vec2,
+	pub camera: Rect,
 	pub render_order: Vec<&'static str>,
 	pub zoom: f32,
 	pub resources: Resources,
@@ -16,7 +18,12 @@ impl Master {
 	pub fn new() -> Master {
 		Master {
 			time_since_start: 0.0,
-			camera_pos: Vec2::ZERO,
+			camera: Rect {
+				x: 0.0,
+				y: 0.0,
+				w: SCREEN_WIDTH as f32,
+				h: SCREEN_HEIGHT as f32,
+			},
 			render_order: vec![
 				"default",
 				"particle",
@@ -40,8 +47,8 @@ impl Master {
 
 	pub fn render(&mut self, world: &mut World) {
 		for layer in self.render_order.iter() {
-			texture_render_system(world, self.camera_pos, layer);
-			map_render_system(world, self.camera_pos, layer);
+			texture_render_system(world, self.camera, layer);
+			map_render_system(world, self.camera, layer);
 			text_render_system(world, layer);
 		}
 	}

@@ -43,7 +43,7 @@ async fn main() {
         let game_render_target = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
         set_camera(&Camera2D {
             zoom: vec2(1.0 / SCREEN_WIDTH as f32 * 2.0, 1.0 / SCREEN_HEIGHT as f32 * 2.0),
-            target: master.camera_pos,
+            target: master.camera.point(),
             render_target: Some(game_render_target),
             ..Default::default()
         });
