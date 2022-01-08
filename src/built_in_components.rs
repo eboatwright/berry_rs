@@ -88,14 +88,16 @@ pub struct Animation {
 	pub id: &'static str,
 	pub frames: Vec<usize>,
 	pub frame_duration: f32,
+	pub dont_interrupt: bool,
 }
 
-impl Animation {
-	pub fn copy(&self) -> Animation {
+impl Clone for Animation {
+	fn clone(&self) -> Animation {
 		Animation {
 			id: self.id,
 			frames: self.frames.clone(),
 			frame_duration: self.frame_duration,
+			dont_interrupt: self.dont_interrupt,
 		}
 	}
 }
@@ -117,25 +119,16 @@ impl Animator {
 		&& animation_id != self.current_animation.id {
 			for animation in self.animations.iter() {
 				if animation.id == animation_id {
-					self.current_animation = animation.copy();
+					if animation.dont_interrupt {
+						self.dont_interrupt = true;
+					}
+
+					self.current_animation = animation.clone();
 					self.animation_timer = 0.0;
 					self.animation_frame_index = 0;
 
 					return;
 				}
-			}
-		}
-	}
-
-	pub fn play_animation_uninterrupted(&mut self, animation_id: &'static str) {
-		for animation in self.animations.iter() {
-			if animation.id == animation_id {
-				self.current_animation = animation.copy();
-				self.animation_timer = 0.0;
-				self.animation_frame_index = 0;
-				self.dont_interrupt = true;
-
-				return;
 			}
 		}
 	}

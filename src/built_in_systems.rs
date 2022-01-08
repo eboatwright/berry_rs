@@ -223,7 +223,11 @@ pub fn animator_update_system(world: &mut World) {
 			animator.animation_timer = animator.current_animation.frame_duration;
 			animator.animation_frame_index += 1;
 			if animator.animation_frame_index >= animator.current_animation.frames.len() {
-				animator.animation_frame_index = 0;
+				if !animator.dont_interrupt {
+					animator.animation_frame_index = 0;
+				} else {
+					animator.animation_frame_index -= 1;
+				}
 				animator.dont_interrupt = false;
 			}
 			if world.get::<DontAnimateTexture>(entity).is_err() {
