@@ -1,3 +1,5 @@
+use macroquad::audio::play_sound;
+use macroquad::audio::PlaySoundParams;
 use ::rand::thread_rng;
 use ::rand::Rng;
 use crate::util::get_mouse_position;
@@ -176,7 +178,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 		if mouse_collider.overlaps(&mouse_transform, collider, transform) {
 			if !button.selected {
 				button.selected = true;
-				master.resources.play_sound(button.select_sfx, false, 1.0);
+				play_sound(button.select_sfx.unwrap(), PlaySoundParams { looped: false, volume: 1.0 });
 			}
 			if world.get::<DropShadow>(entity).is_err() {
 				to_update_shadow.push((true, entity));
@@ -240,7 +242,7 @@ pub fn animator_update_system(world: &mut World) {
 }
 
 pub fn particle_update_system(world: &mut World) {
-	let mut to_spawn: Vec<(Transform, Rigidbody2D, Particle, Texture)> = Vec::new();
+	let mut to_spawn: Vec<(Transform, Rigidbody2D, Particle, Texture, RenderLayer)> = Vec::new();
 	let mut rng = thread_rng();
 	for (_entity, (transform, particle_spawner)) in &mut world.query::<(&Transform, &mut ParticleSpawner)>() {
 		particle_spawner.spawn_timer -= delta_time();
@@ -262,11 +264,11 @@ pub fn particle_update_system(world: &mut World) {
 					life: particle_spawner.life,
 				},
 				Texture {
-					render_layer: "particle",
 					texture: particle_spawner.texture,
 					color: particle_spawner.color,
 					..Default::default()
 				},
+				RenderLayer("particle"),
 			));
 		}
 	}
@@ -315,8 +317,8 @@ pub fn follow_update_system(world: &mut World) {
 }
 
 pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
-	for (entity, (transform, texture)) in &mut world.query::<(&Transform, &Texture)>() {
-		if texture.render_layer == layer {
+	for (entity, (transform, texture, render_layer)) in &mut world.query::<(&Transform, &Texture, &RenderLayer)>() {
+		if render_layer.0 == layer {
 			let mut x_pos = transform.position.x - texture.size().x * transform.scale.x / 2.0 + texture.size().x / 2.0;
 			let mut y_pos = transform.position.y - texture.size().y * transform.scale.y / 2.0 + texture.size().y / 2.0;
 
@@ -386,8 +388,8 @@ pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'stati
 }
 
 pub fn map_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
-	for (_entity, (map, texture)) in &mut world.query::<(&Map, &Texture)>() {
-		if texture.render_layer == layer {
+	for (_entity, (map, texture, render_layer)) in &mut world.query::<(&Map, &Texture, &RenderLayer)>() {
+		if render_layer.0 == layer {
 			for y in 0..map.tiles.len() {
 				for x in 0..map.tiles[0].len() {
 					if map.tiles[y][x] != 0
@@ -424,9 +426,23 @@ pub fn map_render_system(world: &mut World, camera_pos: Vec2, layer: &'static st
 	}
 }
 
+pub fn rectangle_render_system(world: &mut World, layer: &'static str) {
+	for (_entity, (transform, rectangle, render_layer)) in &mut world.query::<(&Transform, &Rectangle, &RenderLayer)>() {
+		if render_layer.0 == layer {
+			draw_rectangle(
+				transform.position.x.round(),
+				transform.position.y.round(),
+				rectangle.size.x,
+				rectangle.size.y,
+				rectangle.color,
+			);
+		}
+	}
+}
+
 pub fn text_render_system(world: &mut World, layer: &'static str) {
-	for (entity, (transform, text)) in &mut world.query::<(&Transform, &TextRenderer)>() {
-		if text.render_layer == layer {
+	for (entity, (transform, text, render_layer)) in &mut world.query::<(&Transform, &TextRenderer, &RenderLayer)>() {
+		if render_layer.0 == layer {
 			let mut offset = Vec2::ZERO;
 			if let Ok(render_offset) = world.get::<RenderOffset>(entity) {
 				offset = render_offset.0;

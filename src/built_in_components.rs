@@ -245,8 +245,15 @@ impl Default for DropShadow {
 #[derive(Default)]
 pub struct RenderOffset(pub Vec2);
 
+pub struct RenderLayer(pub &'static str);
+
+impl Default for RenderLayer {
+	fn default() -> RenderLayer {
+		RenderLayer("default")
+	}
+}
+
 pub struct Texture {
-	pub render_layer: &'static str,
 	pub texture: Texture2D,
 	pub color: Color,
 	pub source: Rect,
@@ -255,7 +262,6 @@ pub struct Texture {
 impl Default for Texture {
 	fn default() -> Texture {
 		Texture {
-			render_layer: "default",
 			texture: Texture2D::empty(),
 			color: WHITE,
 			source: Rect::default(),
@@ -273,8 +279,22 @@ impl Texture {
 	}
 }
 
+#[derive(Copy, Clone)]
+pub struct Rectangle {
+	pub size: Vec2,
+	pub color: Color,
+}
+
+impl Default for Rectangle {
+	fn default() -> Rectangle {
+		Rectangle {
+			size: vec2(10.0, 10.0),
+			color: WHITE,
+		}
+	}
+}
+
 pub struct TextRenderer {
-	pub render_layer: &'static str,
 	pub text: &'static str,
 	pub params: TextParams,
 }
@@ -282,7 +302,6 @@ pub struct TextRenderer {
 impl Default for TextRenderer {
 	fn default() -> TextRenderer {
 		TextRenderer {
-			render_layer: "default",
 			text: "",
 			params: TextParams {
 				font: Font::default(),
