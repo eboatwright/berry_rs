@@ -1,5 +1,3 @@
-use macroquad::audio::play_sound;
-use macroquad::audio::PlaySoundParams;
 use crate::util::load_sound_file;
 use macroquad::audio::Sound;
 use crate::util::load_font_file;

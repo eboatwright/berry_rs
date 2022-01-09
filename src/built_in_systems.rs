@@ -426,9 +426,13 @@ pub fn map_render_system(world: &mut World, camera_pos: Vec2, layer: &'static st
 	}
 }
 
-pub fn rectangle_render_system(world: &mut World, layer: &'static str) {
+pub fn rectangle_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
 	for (_entity, (transform, rectangle, render_layer)) in &mut world.query::<(&Transform, &Rectangle, &RenderLayer)>() {
-		if render_layer.0 == layer {
+		if render_layer.0 == layer
+		&& transform.position.y + rectangle.size.y > camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+		&& transform.position.y < camera_pos.y + SCREEN_HEIGHT as f32 / 2.0
+		&& transform.position.x + rectangle.size.x > camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+		&& transform.position.x < camera_pos.x + SCREEN_WIDTH as f32 / 2.0 {
 			draw_rectangle(
 				transform.position.x.round(),
 				transform.position.y.round(),

@@ -44,7 +44,7 @@ impl Master {
 		for layer in self.render_order.iter() {
 			texture_render_system(world, self.camera_pos, layer);
 			map_render_system(world, self.camera_pos, layer);
-			rectangle_render_system(world, layer);
+			rectangle_render_system(world, self.camera_pos, layer);
 			text_render_system(world, layer);
 		}
 	}
