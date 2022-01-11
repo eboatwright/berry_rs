@@ -1,5 +1,5 @@
-use macroquad::audio::play_sound;
 use macroquad::audio::PlaySoundParams;
+use macroquad::audio::play_sound;
 use ::rand::thread_rng;
 use ::rand::Rng;
 use crate::util::get_mouse_position;
@@ -170,7 +170,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 			..Default::default()
 		};
 		let mouse_collider = BoxCollider2D {
-			size: vec2(3.0, 3.0),
+			size: vec2(1.0, 1.0),
 			offset: Vec2::ZERO,
 		};
 		
@@ -178,7 +178,9 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 		if mouse_collider.overlaps(&mouse_transform, collider, transform) {
 			if !button.selected {
 				button.selected = true;
-				play_sound(button.select_sfx.unwrap(), PlaySoundParams { looped: false, volume: 1.0 });
+				if let Some(sfx) = button.select_sfx {
+					play_sound(sfx, PlaySoundParams { looped: false, volume: 1.0 });
+				}
 			}
 			if world.get::<DropShadow>(entity).is_err() {
 				to_update_shadow.push((true, entity));
