@@ -162,7 +162,7 @@ pub fn rigidbody2d_update_system(world: &mut World) {
 }
 
 pub fn button_update_system(world: &mut World, master: &mut Master) {
-	let mut functions: Vec<fn(&mut World, &mut Master)> = Vec::new();
+	let mut functions: Vec<(fn(&mut World, &mut Master, Entity), Entity)> = Vec::new();
 	let mut to_update_shadow: Vec<(bool, Entity)> = Vec::new();
 	for (entity, (transform, collider, button)) in &mut world.query::<(&Transform, &BoxCollider2D, &mut Button)>() {
 		let mouse_transform = Transform {
@@ -173,7 +173,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 			size: vec2(1.0, 1.0),
 			offset: Vec2::ZERO,
 		};
-		
+
 		let mut target_offset = Vec2::ZERO;
 		if mouse_collider.overlaps(&mouse_transform, collider, transform) {
 			if !button.selected {
@@ -187,7 +187,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 			}
 			target_offset = button.highlight_offset;
 			if is_mouse_button_pressed(MouseButton::Left) {
-				functions.push(button.function);
+				functions.push((button.function, entity));
 			}
 		} else {
 			button.selected = false;
@@ -201,7 +201,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 		}
 	}
 	for function in functions {
-		function(world, master);
+		function.0(world, master, function.1);
 	}
 	for entity in to_update_shadow {
 		if entity.0 {

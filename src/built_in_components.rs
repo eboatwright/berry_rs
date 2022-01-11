@@ -1,3 +1,4 @@
+use hecs::Entity;
 use macroquad::audio::Sound;
 use hecs::World;
 use crate::Master;
@@ -53,7 +54,7 @@ pub struct Rigidbody2D {
 }
 
 pub struct Button {
-	pub function: fn(&mut World, &mut Master),
+	pub function: fn(&mut World, &mut Master, Entity),
 	pub hovering_over: bool,
 	pub highlight_offset: Vec2,
 	pub animation_smooth: f32,
@@ -64,7 +65,7 @@ pub struct Button {
 impl Default for Button {
 	fn default() -> Button {
 		Button {
-			function: | _world, _master | {
+			function: | _world, _master, _entity | {
 			},
 			hovering_over: false,
 			highlight_offset: vec2(0.0, -4.0),

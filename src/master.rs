@@ -14,8 +14,8 @@ pub struct Master {
 	pub resources: Resources,
 }
 
-impl Master {
-	pub fn new() -> Master {
+impl Default for Master {
+	fn default() -> Master {
 		Master {
 			time_since_start: 0.0,
 			camera_pos: Vec2::ZERO,
@@ -28,7 +28,9 @@ impl Master {
 			resources: Resources::new(),
 		}
 	}
+}
 
+impl Master {
 	pub fn update(&mut self, world: &mut World) {
 		self.time_since_start = get_time();
 		rigidbody2d_update_system(world);

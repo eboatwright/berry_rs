@@ -31,7 +31,7 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut master = Master::new();
+    let mut master = Master::default();
     master.resources.load().await;
     let mut world = World::new();
 
