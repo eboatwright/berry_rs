@@ -166,7 +166,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 	let mut to_update_shadow: Vec<(bool, Entity)> = Vec::new();
 	for (entity, (transform, collider, button)) in &mut world.query::<(&Transform, &BoxCollider2D, &mut Button)>() {
 		let mouse_transform = Transform {
-			position: get_mouse_position(master).extend(0.0),
+			position: get_mouse_position(master).extend(0.0).round(),
 			..Default::default()
 		};
 		let mouse_collider = BoxCollider2D {
