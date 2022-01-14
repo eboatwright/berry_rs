@@ -53,8 +53,11 @@ pub struct Rigidbody2D {
 	pub grounded_time: f32,
 }
 
+#[derive(Clone)]
+pub struct ButtonClickFunction(pub fn(&mut World, &mut Master, Entity));
+
 pub struct Button {
-	pub function: fn(&mut World, &mut Master, Entity),
+	pub function: ButtonClickFunction,
 	pub hovering_over: bool,
 	pub highlight_offset: Vec2,
 	pub animation_smooth: f32,
@@ -65,8 +68,8 @@ pub struct Button {
 impl Default for Button {
 	fn default() -> Button {
 		Button {
-			function: | _world, _master, _entity | {
-			},
+			function: ButtonClickFunction(| _world, _master, _entity | {
+			}),
 			hovering_over: false,
 			highlight_offset: vec2(0.0, -4.0),
 			animation_smooth: 0.2,
