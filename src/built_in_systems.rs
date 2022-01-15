@@ -26,11 +26,9 @@ pub fn rigidbody2d_update_system(world: &mut World) {
 				let mut tile_transform = Transform::default();
 				let mut tile_collider;
 				let mut collision = (true, true, true, true);
-				let mut tile_pos = vec2(transform.position.x / map.tile_size as f32, transform.position.y / map.tile_size as f32);
-				tile_pos.y = clamp_range(0.0, tile_pos.y, map.tiles.len() as f32 - 1.0);
-				tile_pos.x = clamp_range(0.0, tile_pos.x, map.tiles[0].len() as f32 - 1.0);
-				for y in (tile_pos.y - 10.0) as usize..(tile_pos.y + 10.0) as usize {
-					for x in (tile_pos.x - 10.0) as usize..(tile_pos.x + 10.0) as usize {
+				let tile_pos = vec2(transform.position.x / map.tile_size as f32, transform.position.y / map.tile_size as f32);
+				for y in clamp_range(0.0, tile_pos.y - 10.0, map.tiles.len() as f32 - 1.0) as usize..clamp_range(0.0, tile_pos.y + 10.0, map.tiles.len() as f32 - 1.0) as usize {
+					for x in clamp_range(0.0, tile_pos.x - 10.0, map.tiles[0].len() as f32 - 1.0) as usize..clamp_range(0.0, tile_pos.x + 10.0, map.tiles[0].len() as f32 - 1.0) as usize {
 						if map.tiles[y][x] != 0
 						&& !map.ignore_collision.contains(&map.tiles[y][x]) {
 							tile_transform.position = vec3(x as f32 * map.tile_size as f32, y as f32 * map.tile_size as f32, 0.0);
@@ -97,11 +95,9 @@ pub fn rigidbody2d_update_system(world: &mut World) {
 				let mut tile_transform = Transform::default();
 				let mut tile_collider;
 				let mut collision = (true, true, true, true);
-				let mut tile_pos = vec2(transform.position.x / map.tile_size as f32, transform.position.y / map.tile_size as f32);
-				tile_pos.y = clamp_range(0.0, tile_pos.y, map.tiles.len() as f32);
-				tile_pos.x = clamp_range(0.0, tile_pos.x, map.tiles[0].len() as f32);
-				for y in (tile_pos.y - 10.0) as usize..(tile_pos.y + 10.0) as usize {
-					for x in (tile_pos.x - 10.0) as usize..(tile_pos.x + 10.0) as usize {
+				let tile_pos = vec2(transform.position.x / map.tile_size as f32, transform.position.y / map.tile_size as f32);
+				for y in clamp_range(0.0, tile_pos.y - 10.0, map.tiles.len() as f32 - 1.0) as usize..clamp_range(0.0, tile_pos.y + 10.0, map.tiles.len() as f32 - 1.0) as usize {
+					for x in clamp_range(0.0, tile_pos.x - 10.0, map.tiles[0].len() as f32 - 1.0) as usize..clamp_range(0.0, tile_pos.x + 10.0, map.tiles[0].len() as f32 - 1.0) as usize {
 						if map.tiles[y][x] != 0
 						&& !map.ignore_collision.contains(&map.tiles[y][x]) {
 							tile_transform.position = vec3(x as f32 * map.tile_size as f32, y as f32 * map.tile_size as f32, 0.0);
