@@ -299,14 +299,14 @@ impl Default for Rectangle {
 }
 
 pub struct TextRenderer {
-	pub text: &'static str,
+	pub text: String,
 	pub params: TextParams,
 }
 
 impl Default for TextRenderer {
 	fn default() -> TextRenderer {
 		TextRenderer {
-			text: "",
+			text: String::new(),
 			params: TextParams {
 				font: Font::default(),
 				font_size: 16,

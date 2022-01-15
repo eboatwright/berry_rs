@@ -455,7 +455,7 @@ pub fn text_render_system(world: &mut World, layer: &'static str) {
 			}
 			if let Ok(drop_shadow) = world.get::<DropShadow>(entity) {
 				draw_text_ex(
-					text.text,
+					&text.text,
 					transform.position.x.round() + drop_shadow.offset.x,
 					(transform.position.y + text.params.font_size as f32 / 1.5 + offset.y).round() + drop_shadow.offset.y,
 					TextParams {
@@ -465,9 +465,9 @@ pub fn text_render_system(world: &mut World, layer: &'static str) {
 				);
 			}
 			draw_text_ex(
-				text.text,
+				&text.text,
 				transform.position.x.round() + offset.x,
-				(transform.position.y + text.params.font_size as f32 / 1.5 + offset.y).round(),
+				(transform.position.y + (text.params.font_size as f32 * text.params.font_scale) / 1.5 + offset.y).round(),
 				text.params,
 			);
 		}
