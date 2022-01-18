@@ -63,6 +63,7 @@ pub struct Button {
 	pub animation_smooth: f32,
 	pub select_sfx: Option<Sound>,
 	pub selected: bool,
+	pub shadow_color: Color,
 }
 
 impl Default for Button {
@@ -75,6 +76,12 @@ impl Default for Button {
 			animation_smooth: 0.2,
 			select_sfx: None,
 			selected: false,
+			shadow_color: Color {
+				r: 0.0,
+				g: 0.0,
+				b: 0.0,
+				a: 0.4,
+			},
 		}
 	}
 }

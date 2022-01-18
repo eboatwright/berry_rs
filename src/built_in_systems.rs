@@ -159,7 +159,7 @@ pub fn rigidbody2d_update_system(world: &mut World) {
 
 pub fn button_update_system(world: &mut World, master: &mut Master) {
 	let mut functions: Vec<(ButtonClickFunction, Entity)> = Vec::new();
-	let mut to_update_shadow: Vec<(bool, Entity)> = Vec::new();
+	let mut to_update_shadow: Vec<(bool, Color, Entity)> = Vec::new();
 	for (entity, (transform, collider, button)) in &mut world.query::<(&Transform, &BoxCollider2D, &mut Button)>() {
 		let mouse_transform = Transform {
 			position: get_mouse_position(master).extend(0.0).round(),
@@ -179,7 +179,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 				}
 			}
 			if world.get::<DropShadow>(entity).is_err() {
-				to_update_shadow.push((true, entity));
+				to_update_shadow.push((true, button.shadow_color, entity));
 			}
 			target_offset = button.highlight_offset;
 			if is_mouse_button_pressed(MouseButton::Left) {
@@ -188,7 +188,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 		} else {
 			button.selected = false;
 			if world.get::<DropShadow>(entity).is_ok() {
-				to_update_shadow.push((false, entity));
+				to_update_shadow.push((false, BLACK, entity));
 			}
 		}
 
@@ -201,17 +201,12 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 	}
 	for entity in to_update_shadow {
 		if entity.0 {
-			world.insert_one(entity.1, DropShadow {
-				color: Color {
-					r: 0.0,
-					g: 0.0,
-					b: 0.0,
-					a: 0.4,
-				},
+			world.insert_one(entity.2, DropShadow {
+				color: entity.1,
 				offset: vec2(0.0, 2.0),
 			}).unwrap();
 		} else {
-			world.remove_one::<DropShadow>(entity.1).unwrap();
+			world.remove_one::<DropShadow>(entity.2).unwrap();
 		}
 	}
 }
