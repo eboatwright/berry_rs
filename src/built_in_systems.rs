@@ -1,5 +1,5 @@
-use macroquad::audio::PlaySoundParams;
 use macroquad::audio::play_sound;
+use macroquad::audio::PlaySoundParams;
 use ::rand::thread_rng;
 use ::rand::Rng;
 use crate::util::get_mouse_position;
@@ -174,8 +174,8 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 		if mouse_collider.overlaps(&mouse_transform, collider, transform) {
 			if !button.selected {
 				button.selected = true;
-				if let Some(sfx) = button.select_sfx {
-					play_sound(sfx, PlaySoundParams { looped: false, volume: 1.0 });
+				if button.select_sfx != None {
+					play_sound(button.select_sfx.unwrap(), PlaySoundParams { looped: false, volume: 0.0 });
 				}
 			}
 			if world.get::<DropShadow>(entity).is_err() {
@@ -309,7 +309,7 @@ pub fn follow_update_system(world: &mut World) {
 	}
 }
 
-pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
+pub fn texture_render_system(world: &mut World, master: &Master, layer: &'static str) {
 	for (entity, (transform, texture, render_layer)) in &mut world.query::<(&Transform, &Texture, &RenderLayer)>() {
 		if render_layer.0 == layer {
 			let mut x_pos = transform.position.x - texture.size().x * transform.scale.x / 2.0 + texture.size().x / 2.0;
@@ -320,10 +320,10 @@ pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'stati
 				y_pos += render_offset.0.y;
 			}
 
-			if x_pos + texture.size().x * transform.scale.x < camera_pos.x - SCREEN_WIDTH as f32 / 2.0
-			|| x_pos > camera_pos.x + SCREEN_WIDTH as f32 / 2.0
-			|| y_pos + texture.size().y * transform.scale.y < camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
-			|| y_pos > camera_pos.y + SCREEN_HEIGHT as f32 / 2.0 {
+			if x_pos + texture.size().x * transform.scale.x < master.camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+			|| x_pos > master.camera_pos.x + SCREEN_WIDTH as f32 / 2.0
+			|| y_pos + texture.size().y * transform.scale.y < master.camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+			|| y_pos > master.camera_pos.y + SCREEN_HEIGHT as f32 / 2.0 {
 				continue;
 			}
 
@@ -380,16 +380,16 @@ pub fn texture_render_system(world: &mut World, camera_pos: Vec2, layer: &'stati
 	}
 }
 
-pub fn map_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
+pub fn map_render_system(world: &mut World, master: &Master, layer: &'static str) {
 	for (_entity, (map, texture, render_layer)) in &mut world.query::<(&Map, &Texture, &RenderLayer)>() {
 		if render_layer.0 == layer {
 			for y in 0..map.tiles.len() {
 				for x in 0..map.tiles[0].len() {
 					if map.tiles[y][x] != 0
-					&& (y as f32 + 1.0) * (map.tile_size as f32) > camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
-					&& (y as f32) * (map.tile_size as f32) < camera_pos.y + SCREEN_HEIGHT as f32 / 2.0
-					&& (x as f32 + 1.0) * (map.tile_size as f32) > camera_pos.x - SCREEN_WIDTH as f32 / 2.0
-					&& (x as f32) * (map.tile_size as f32) < camera_pos.x + SCREEN_WIDTH as f32 / 2.0 {
+					&& (y as f32 + 1.0) * (map.tile_size as f32) > master.camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+					&& (y as f32) * (map.tile_size as f32) < master.camera_pos.y + SCREEN_HEIGHT as f32 / 2.0
+					&& (x as f32 + 1.0) * (map.tile_size as f32) > master.camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+					&& (x as f32) * (map.tile_size as f32) < master.camera_pos.x + SCREEN_WIDTH as f32 / 2.0 {
 						draw_texture_ex(
 							texture.texture,
 							x as f32 * map.tile_size as f32,
@@ -419,13 +419,13 @@ pub fn map_render_system(world: &mut World, camera_pos: Vec2, layer: &'static st
 	}
 }
 
-pub fn rectangle_render_system(world: &mut World, camera_pos: Vec2, layer: &'static str) {
+pub fn rectangle_render_system(world: &mut World, master: &Master, layer: &'static str) {
 	for (_entity, (transform, rectangle, render_layer)) in &mut world.query::<(&Transform, &Rectangle, &RenderLayer)>() {
 		if render_layer.0 == layer
-		&& transform.position.y + rectangle.size.y > camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
-		&& transform.position.y < camera_pos.y + SCREEN_HEIGHT as f32 / 2.0
-		&& transform.position.x + rectangle.size.x > camera_pos.x - SCREEN_WIDTH as f32 / 2.0
-		&& transform.position.x < camera_pos.x + SCREEN_WIDTH as f32 / 2.0 {
+		&& transform.position.y + rectangle.size.y > master.camera_pos.y - SCREEN_HEIGHT as f32 / 2.0
+		&& transform.position.y < master.camera_pos.y + SCREEN_HEIGHT as f32 / 2.0
+		&& transform.position.x + rectangle.size.x > master.camera_pos.x - SCREEN_WIDTH as f32 / 2.0
+		&& transform.position.x < master.camera_pos.x + SCREEN_WIDTH as f32 / 2.0 {
 			draw_rectangle(
 				transform.position.x.round(),
 				transform.position.y.round(),
