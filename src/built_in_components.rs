@@ -86,6 +86,19 @@ impl Default for Button {
 	}
 }
 
+#[derive(Copy, Clone)]
+pub struct Slider {
+	pub x_limits: Vec2,
+}
+
+impl Default for Slider {
+	fn default() -> Slider {
+		Slider {
+			x_limits: vec2(-15.0, 15.0),
+		}
+	}
+}
+
 #[derive(Default)]
 pub struct SinWave {
 	pub value: f64,

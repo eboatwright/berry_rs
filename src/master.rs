@@ -38,6 +38,7 @@ impl Master {
 		particle_update_system(world);
 		camera_update_system(world, self);
 		button_update_system(world, self);
+		slider_update_system(world, self);
 		follow_update_system(world);
 		sin_wave_update_system(world, self);
 	}

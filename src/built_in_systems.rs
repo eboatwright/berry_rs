@@ -175,7 +175,10 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 			if !button.selected {
 				button.selected = true;
 				if button.select_sfx != None {
-					play_sound(button.select_sfx.unwrap(), PlaySoundParams { looped: false, volume: 0.0 });
+					play_sound(button.select_sfx.unwrap(), PlaySoundParams {
+						looped: false,
+						volume: 100.0,
+					});
 				}
 			}
 			if world.get::<DropShadow>(entity).is_err() {
@@ -207,6 +210,16 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 			}).unwrap();
 		} else {
 			world.remove_one::<DropShadow>(entity.2).unwrap();
+		}
+	}
+}
+
+pub fn slider_update_system(world: &mut World, master: &Master) {
+	let mouse_position = get_mouse_position(master);
+	for (_entity, (transform, collider, button, slider)) in &mut world.query::<(&mut Transform, &BoxCollider2D, &Button, &Slider)>() {
+		if button.selected
+		&& is_mouse_button_down(MouseButton::Left) {
+			transform.position.x = clamp_range(slider.x_limits.x, mouse_position.x - collider.size.x / 2.0, slider.x_limits.y);
 		}
 	}
 }
