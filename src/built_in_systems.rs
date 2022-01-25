@@ -177,7 +177,7 @@ pub fn button_update_system(world: &mut World, master: &mut Master) {
 				if button.select_sfx != None {
 					play_sound(button.select_sfx.unwrap(), PlaySoundParams {
 						looped: false,
-						volume: 100.0,
+						volume: 1.0,
 					});
 				}
 			}
