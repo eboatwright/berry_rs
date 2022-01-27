@@ -6,6 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-macroquad = { git = "https://github.com/not-fl3/macroquad", rev = "3ad40bc" }
-hecs = { git = "https://github.com/Ralith/hecs", rev = "64c2ca5" }
-rand = "0.8.4"
+macroquad = { git = "https://github.com/eboatwright/macroquad" }
+hecs = { git = "https://github.com/eboatwright/hecs" }

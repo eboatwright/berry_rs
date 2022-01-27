@@ -1,7 +1,3 @@
-use crate::util::load_sound_file;
-use macroquad::audio::Sound;
-use crate::util::load_font_file;
-use crate::util::load_texture_file;
 use macroquad::prelude::*;
 
 pub struct Resources {
