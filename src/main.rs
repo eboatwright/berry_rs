@@ -6,6 +6,7 @@ mod built_in_components;
 mod built_in_systems;
 mod master;
 mod resources;
+mod scene;
 
 use crate::master::Master;
 use macroquad::prelude::*;
@@ -31,7 +32,6 @@ fn window_conf() -> Conf {
 async fn main() {
     let mut master = Master::default();
     master.resources.load().await;
-    let mut world = World::new();
 
     let game_render_target = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
     let mut camera = Camera2D {
@@ -42,24 +42,24 @@ async fn main() {
     };
 
     loop {
-        master.update(&mut world);
+        master.update();
 
         let mut camera_pos = Vec2::ZERO;
-        for (_entity, camera) in &mut world.query::<&Camera>() {
+        for (_entity, camera) in &mut master.current_scene.world.query::<&Camera>() {
             camera_pos = camera.position;
         }
         camera.target = camera_pos;
         set_camera(&camera);
         clear_background(DARKGRAY);
 
-        master.render(&mut world);
+        master.render();
 
         set_default_camera();
 
         let game_diff_w = screen_width() / SCREEN_WIDTH as f32;
         let game_diff_h = screen_height() / SCREEN_HEIGHT as f32;
         let aspect_diff = game_diff_w.min(game_diff_h);
-        for (_entity, camera) in &mut world.query::<&mut Camera>() {
+        for (_entity, camera) in &mut master.current_scene.world.query::<&mut Camera>() {
             camera.zoom = aspect_diff;
         }
 
