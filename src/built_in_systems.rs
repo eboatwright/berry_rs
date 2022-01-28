@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 use crate::built_in_components::*;
 
 //TODO
-pub fn rigidbody2d_update_system(master: &mut Master) {
+pub fn rigidbody_update_system(master: &mut Master) {
 	for (_entity, ()) in &mut master.world.query::<()>() {
 	}
 }

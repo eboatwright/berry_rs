@@ -63,7 +63,7 @@ impl BoxCollider2D {
 }
 
 #[derive(Copy, Clone, PartialEq, Default)]
-pub struct Rigidbody2D {
+pub struct Rigidbody {
 	pub velocity: Vec2,
 	pub gravity: Vec2,
 	pub friction: Vec2,
@@ -71,7 +71,7 @@ pub struct Rigidbody2D {
 	pub grounded_time: f32,
 }
 
-impl Rigidbody2D {
+impl Rigidbody {
 	pub fn grounded(&self) -> bool {
 		self.grounded > 0.0
 	}
@@ -178,13 +178,42 @@ impl Default for Map {
 	}
 }
 
-//TODO
-#[derive(Copy, Clone, PartialEq, Default)]
-pub struct ParticleSpawner {}
+#[derive(Copy, Clone, PartialEq)]
+pub struct ParticleSpawner {
+	pub particle_life: f32,
+	pub spawn_rate: f32,
+	pub spawn_timer: f32,
+	pub min_velocity: Vec2,
+	pub max_velocity: Vec2,
+	pub particle_rigidbody: Rigidbody,
+	pub particle_texture: Texture,
+	pub min_spawn_offset: Vec2,
+	pub max_spawn_offset: Vec2,
+}
 
-//TODO
+impl Default for ParticleSpawner {
+	fn default() -> Self {
+		Self {
+			particle_life: 30.0,
+			spawn_rate: 5.0,
+			spawn_timer: 0.0,
+			min_velocity: vec2(-3.0, -3.0),
+			max_velocity: vec2(3.0, 3.0),
+			particle_rigidbody: Rigidbody {
+				friction: vec2(0.1, 0.1),
+				..Default::default()
+			},
+			particle_texture: Texture::default(),
+			min_spawn_offset: vec2(-8.0, -8.0),
+			max_spawn_offset: vec2(8.0, 8.0),
+		}
+	}
+}
+
 #[derive(Copy, Clone, PartialEq, Default)]
-pub struct Particle {}
+pub struct Particle {
+	pub life: f32,
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub struct DropShadow {
