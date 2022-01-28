@@ -4,29 +4,40 @@ use crate::built_in_components::*;
 
 //TODO
 pub fn rigidbody2d_update_system(master: &mut Master) {
+	for (_entity, ()) in &mut master.world.query::<()>() {
+	}
 }
 
 //TODO
 pub fn button_update_system(master: &mut Master) {
+	for (_entity, ()) in &mut master.world.query::<()>() {
+	}
 }
 
 //TODO
 pub fn slider_update_system(master: &mut Master) {
+	for (_entity, ()) in &mut master.world.query::<()>() {
+	}
 }
 
 //TODO
 pub fn animator_update_system(master: &mut Master) {
+	for (_entity, ()) in &mut master.world.query::<()>() {
+	}
 }
 
 //TODO
 pub fn particle_update_system(master: &mut Master) {
+	for (_entity, ()) in &mut master.world.query::<()>() {
+	}
 }
 
 //TODO
 pub fn camera_update_system(master: &mut Master) {
+	for (_entity, ()) in &mut master.world.query::<()>() {
+	}
 }
 
-//TODO
 pub fn texture_render_system(master: &Master, layer: &'static str) {
 	for (_entity, (transform, texture, render_layer)) in &mut master.world.query::<(&Transform, &Texture, &RenderLayer)>() {
 		if layer == render_layer.0 {

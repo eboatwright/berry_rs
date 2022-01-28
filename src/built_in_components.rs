@@ -68,14 +68,36 @@ pub struct Rigidbody2D {
 	pub grounded_time: f32,
 }
 
+impl Rigidbody2D {
+	pub fn grounded(&self) -> bool {
+		self.grounded > 0.0
+	}
+}
+
 //TODO
 pub struct Button {}
 
 //TODO
 pub struct Slider {}
 
-//TODO
-pub struct Animation {}
+#[derive(Clone, PartialEq)]
+pub struct Animation {
+	pub name: &'static str,
+	pub frames: Vec<usize>,
+	pub frame_duration: f32,
+	frame_timer: f32,
+}
+
+impl Default for Animation {
+	fn default() -> Self {
+		Self {
+			name: "animation",
+			frames: vec![],
+			frame_duration: 1.0,
+			frame_timer: 0.0,
+		}
+	}
+}
 
 //TODO
 pub struct Animator {}
@@ -107,7 +129,9 @@ pub struct ParticleSpawner {}
 pub struct Particle {}
 
 //TODO
-pub struct DropShadow {}
+pub struct DropShadow {
+	pub color: Color,
+}
 
 #[derive(Clone, PartialEq)]
 pub struct RenderLayer(pub String);
