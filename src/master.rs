@@ -26,10 +26,20 @@ impl Default for Master {
 
 impl Master {
 	pub fn update(&mut self) {
+		rigidbody2d_update_system(self);
+		button_update_system(self);
+		slider_update_system(self);
+		animator_update_system(self);
+		particle_update_system(self);
+		camera_update_system(self);
 	}
 
 	pub fn render(&self) {
 		for layer in self.render_order.iter() {
+			texture_render_system(self, layer);
+			map_render_system(self, layer);
+			rectangle_render_system(self, layer);
+			text_render_system(self, layer);
 		}
 	}
 }

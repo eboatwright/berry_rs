@@ -11,7 +11,6 @@ mod game_scene;
 
 use crate::master::Master;
 use macroquad::prelude::*;
-use hecs::World;
 use crate::built_in_components::RenderCamera;
 
 const SCREEN_WIDTH: i32 = 960 / 1;
@@ -35,6 +34,7 @@ async fn main() {
     master.resources.load().await;
 
     let game_render_target = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
+    game_render_target.texture.set_filter(FilterMode::Nearest);
     let mut camera = Camera2D {
         zoom: vec2(1.0 / SCREEN_WIDTH as f32 * 2.0, 1.0 / SCREEN_HEIGHT as f32 * 2.0),
         render_target: Some(game_render_target),
@@ -58,30 +58,35 @@ async fn main() {
 
         set_default_camera();
 
-        let game_diff_w = screen_width() / SCREEN_WIDTH as f32;
-        let game_diff_h = screen_height() / SCREEN_HEIGHT as f32;
-        let aspect_diff = game_diff_w.min(game_diff_h);
+        let game_diff = vec2(
+            screen_width() / SCREEN_WIDTH as f32,
+            screen_height() / SCREEN_HEIGHT as f32
+        );
+        let aspect_diff = game_diff.x.min(game_diff.y);
         for (_entity, camera) in &mut master.world.query::<&mut RenderCamera>() {
             camera.zoom = aspect_diff;
             break;
         }
 
-        let scaled_game_size_w = SCREEN_WIDTH as f32 * aspect_diff;
-        let scaled_game_size_h = SCREEN_HEIGHT as f32 * aspect_diff;
+        let scaled_game_size = vec2(
+            SCREEN_WIDTH as f32 * aspect_diff,
+            SCREEN_HEIGHT as f32 * aspect_diff,
+        );
 
-        let width_padding = (screen_width() - scaled_game_size_w) * 0.5;
-        let height_padding = (screen_height() - scaled_game_size_h) * 0.5;
+        let padding = vec2(
+            (screen_width() - scaled_game_size.x) * 0.5,
+            (screen_height() - scaled_game_size.y) * 0.5,
+        );
 
         clear_background(BLACK);
 
-        game_render_target.texture.set_filter(FilterMode::Nearest);
         draw_texture_ex(
             game_render_target.texture,
-            width_padding,
-            height_padding,
+            padding.x,
+            padding.y,
             WHITE,
             DrawTextureParams {
-                dest_size: Some(Vec2::new(scaled_game_size_w, scaled_game_size_h)),
+                dest_size: Some(scaled_game_size),
                 ..Default::default()
             },
         );

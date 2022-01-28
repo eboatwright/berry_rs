@@ -56,10 +56,19 @@ pub fn rectangle_render_system(master: &Master, layer: &'static str) {
 	}
 }
 
-//TODO
 pub fn text_render_system(master: &Master, layer: &'static str) {
-	for (_entity, (transform, render_layer)) in &mut master.world.query::<(&Transform, &RenderLayer)>() {
+	for (_entity, (transform, text, render_layer)) in &mut master.world.query::<(&Transform, &TextRenderer, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			draw_text_ex(
+				&text.text,
+				transform.position.x.round(),
+				transform.position.y.round(),
+				TextParams {
+					font_scale: text.params.font_scale * transform.scale.y,
+					font_scale_aspect: text.params.font_scale_aspect * transform.scale.x / transform.scale.y,
+					..text.params
+				},
+			);
 		}
 	}
 }

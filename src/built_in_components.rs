@@ -2,7 +2,7 @@ use hecs::Entity;
 use hecs::World;
 use macroquad::prelude::*;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Default)]
 pub struct Parent(pub u32);
 
 impl Parent {
@@ -44,9 +44,8 @@ impl Default for BoxCollider2D {
 }
 
 impl BoxCollider2D {
-	pub fn overlaps(
-		a: (&BoxCollider2D, &Transform),
-		b: (&BoxCollider2D, &Transform)) -> bool {
+	pub fn overlaps(a: (&BoxCollider2D, &Transform),
+					b: (&BoxCollider2D, &Transform)) -> bool {
 		let a_position = a.1.position + a.0.offset;
 		let a_size = a.0.size * a.1.scale;
 
@@ -88,7 +87,7 @@ pub struct RenderCamera {
 }
 
 impl RenderCamera {
-	pub fn get_mouse_position(&self) -> Vec2 {
+	pub fn mouse_position(&self) -> Vec2 {
 		let mut mouse_pos = vec2(mouse_position().0, mouse_position().1);
 		
 		mouse_pos.x = (mouse_pos.x - screen_width() / 2.0) / self.zoom + self.position.x;
@@ -110,17 +109,47 @@ pub struct Particle {}
 //TODO
 pub struct DropShadow {}
 
+#[derive(Clone, PartialEq)]
 pub struct RenderLayer(pub String);
+
+impl Default for RenderLayer {
+	fn default() -> Self {
+		Self("default".to_string())
+	}
+}
 
 //TODO
 pub struct Texture {}
 
+#[derive(Copy, Clone, PartialEq)]
 pub struct Rectangle {
 	pub size: Vec2,
 	pub color: Color,
 }
 
-//TODO
+impl Default for Rectangle {
+	fn default() -> Self {
+		Self {
+			size: Vec2::ONE,
+			color: WHITE,
+		}
+	}
+}
+
+#[derive(Clone)]
 pub struct TextRenderer {
 	pub text: String,
+	pub params: TextParams,
+}
+
+impl Default for TextRenderer {
+	fn default() -> Self {
+		Self {
+			text: "default text".to_string(),
+			params: TextParams {
+				font_size: 16,
+				..Default::default()
+			},
+		}
+	}
 }
