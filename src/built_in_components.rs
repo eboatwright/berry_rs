@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use macroquad::audio::Sound;
 use crate::Master;
 use hecs::Entity;
@@ -156,9 +157,26 @@ impl RenderCamera {
 	}
 }
 
-//TODO
-#[derive(Copy, Clone, PartialEq, Default)]
-pub struct Map {}
+#[derive(Clone, PartialEq)]
+pub struct Map {
+	pub tile_size: u16,
+	pub tiles: Vec<Vec<u16>>,
+	pub special_collision: Vec<(BoxCollider2D, bool, bool, bool, bool)>,
+	pub colors: Vec<Color>,
+	pub y_source_offsets: Vec<f32>,
+}
+
+impl Default for Map {
+	fn default() -> Self {
+		Self {
+			tile_size: 16,
+			tiles: Vec::new(),
+			special_collision: Vec::new(),
+			colors: Vec::new(),
+			y_source_offsets: Vec::new(),
+		}
+	}
+}
 
 //TODO
 #[derive(Copy, Clone, PartialEq, Default)]
@@ -168,10 +186,24 @@ pub struct ParticleSpawner {}
 #[derive(Copy, Clone, PartialEq, Default)]
 pub struct Particle {}
 
-//TODO
-#[derive(Copy, Clone, PartialEq, Default)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct DropShadow {
 	pub color: Color,
+	pub offset: Vec2,
+}
+
+impl Default for DropShadow {
+	fn default() -> Self {
+		Self {
+			color: Color {
+				r: 0.0,
+				g: 0.0,
+				b: 0.0,
+				a: 0.5,
+			},
+			offset: vec2(-2.0, 2.0),
+		}
+	}
 }
 
 #[derive(Clone, PartialEq)]
