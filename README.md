@@ -1,3 +1,6 @@
+# THE CURRENT VERSION IS UNSTABLE!
+ I'm in the process of a complete rework, and the current version is not stable!
+
 # About
  This is Berry.rs! My engine for Rust, Macroquad and HECS!
 
