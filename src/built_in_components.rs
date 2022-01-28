@@ -1,3 +1,5 @@
+use macroquad::audio::Sound;
+use crate::Master;
 use hecs::Entity;
 use hecs::World;
 use macroquad::prelude::*;
@@ -74,10 +76,29 @@ impl Rigidbody2D {
 	}
 }
 
-//TODO
-pub struct Button {}
+#[derive(Copy, Clone)]
+pub struct ButtonClickFunction(pub fn(&mut Master, Entity));
+
+impl Default for ButtonClickFunction {
+	fn default() -> Self {
+		Self(|_master, _entity| {
+		})
+	}
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct Button {
+	pub function: ButtonClickFunction,
+	pub highlight_offset: Vec2,
+	pub animation_smooth: f32,
+	pub hovering_over: bool,
+	pub select_sfx: Option<Sound>,
+	pub played_select_sfx: bool,
+	pub shadow_color: Color,
+}
 
 //TODO
+#[derive(Copy, Clone, PartialEq, Default)]
 pub struct Slider {}
 
 #[derive(Clone, PartialEq)]
@@ -136,15 +157,19 @@ impl RenderCamera {
 }
 
 //TODO
+#[derive(Copy, Clone, PartialEq, Default)]
 pub struct Map {}
 
 //TODO
+#[derive(Copy, Clone, PartialEq, Default)]
 pub struct ParticleSpawner {}
 
 //TODO
+#[derive(Copy, Clone, PartialEq, Default)]
 pub struct Particle {}
 
 //TODO
+#[derive(Copy, Clone, PartialEq, Default)]
 pub struct DropShadow {
 	pub color: Color,
 }
