@@ -85,7 +85,6 @@ pub struct Animation {
 	pub name: &'static str,
 	pub frames: Vec<usize>,
 	pub frame_duration: f32,
-	frame_timer: f32,
 }
 
 impl Default for Animation {
@@ -94,13 +93,30 @@ impl Default for Animation {
 			name: "animation",
 			frames: vec![],
 			frame_duration: 1.0,
-			frame_timer: 0.0,
 		}
 	}
 }
 
-//TODO
-pub struct Animator {}
+#[derive(Clone, PartialEq)]
+pub struct Animator {
+	pub animations: Vec<Animation>,
+	pub current_animation: Animation,
+	pub current_frame_index: usize,
+	pub dont_interrupt: bool,
+	frame_timer: f32,
+}
+
+impl Default for Animator {
+	fn default() -> Self {
+		Self {
+			animations: Vec::new(),
+			current_animation: Animation::default(),
+			current_frame_index: 0,
+			dont_interrupt: false,
+			frame_timer: 0.0,
+		}
+	}
+}
 
 #[derive(Default, Copy, Clone)]
 pub struct RenderCamera {
