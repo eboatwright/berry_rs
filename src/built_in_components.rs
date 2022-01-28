@@ -76,9 +76,6 @@ pub struct Button {}
 pub struct Slider {}
 
 //TODO
-pub struct SinWave {}
-
-//TODO
 pub struct Animation {}
 
 //TODO
@@ -113,11 +110,7 @@ pub struct Particle {}
 //TODO
 pub struct DropShadow {}
 
-//TODO
-pub struct RenderOffset {}
-
-//TODO
-pub struct RenderLayer {}
+pub struct RenderLayer(pub String);
 
 //TODO
 pub struct Texture {}
