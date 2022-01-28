@@ -28,8 +28,22 @@ pub fn camera_update_system(master: &mut Master) {
 
 //TODO
 pub fn texture_render_system(master: &Master, layer: &'static str) {
-	for (_entity, (transform, render_layer)) in &mut master.world.query::<(&Transform, &RenderLayer)>() {
+	for (_entity, (transform, texture, render_layer)) in &mut master.world.query::<(&Transform, &Texture, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			draw_texture_ex(
+				texture.texture,
+				transform.position.x.round(),
+				transform.position.y.round(),
+				texture.color,
+				DrawTextureParams {
+					dest_size: Some(texture.get_size()),
+					source: texture.source,
+					rotation: transform.rotation,
+					flip_x: false,
+					flip_y: false,
+					pivot: None,
+				}
+			);
 		}
 	}
 }

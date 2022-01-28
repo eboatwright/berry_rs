@@ -118,8 +118,32 @@ impl Default for RenderLayer {
 	}
 }
 
-//TODO
-pub struct Texture {}
+#[derive(Copy, Clone, PartialEq)]
+pub struct Texture {
+	pub texture: Texture2D,
+	pub color: Color,
+	pub source: Option<Rect>,
+}
+
+impl Default for Texture {
+	fn default() -> Self {
+		Self {
+			texture: Texture2D::empty(),
+			color: WHITE,
+			source: None,
+		}
+	}
+}
+
+impl Texture {
+	pub fn get_size(&self) -> Vec2 {
+		return if let Some(source) = self.source {
+			vec2(source.w, source.h)
+		} else {
+			vec2(self.texture.width(), self.texture.height())
+		};
+	}
+}
 
 #[derive(Copy, Clone, PartialEq)]
 pub struct Rectangle {
