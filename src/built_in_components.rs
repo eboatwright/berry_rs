@@ -11,20 +11,77 @@ impl Parent {
 	}
 }
 
-pub struct Transform {}
+#[derive(Copy, Clone, PartialEq)]
+pub struct Transform {
+	pub position: Vec2,
+	pub scale: Vec2,
+	pub rotation: f32,
+}
 
-pub struct BoxCollider2D {}
+impl Default for Transform {
+	fn default() -> Self {
+		Self {
+			position: Vec2::ZERO,
+			scale: Vec2::ONE,
+			rotation: 0.0,
+		}
+	}
+}
 
-pub struct Rigidbody2D {}
+#[derive(Copy, Clone, PartialEq)]
+pub struct BoxCollider2D {
+	pub size: Vec2,
+	pub offset: Vec2,
+}
 
+impl Default for BoxCollider2D {
+	fn default() -> Self {
+		Self {
+			size: Vec2::ONE,
+			offset: Vec2::ZERO,
+		}
+	}
+}
+
+impl BoxCollider2D {
+	pub fn overlaps(
+		a: (&BoxCollider2D, &Transform),
+		b: (&BoxCollider2D, &Transform)) -> bool {
+		let a_position = a.1.position + a.0.offset;
+		let a_size = a.0.size * a.1.scale;
+
+		let b_position = b.1.position + b.0.offset;
+		let b_size = b.0.size * b.1.scale;
+
+		a_position.x < b_position.x + b_size.x &&
+        a_position.x + a_size.x > b_position.x &&
+        a_position.y < b_position.y + b_size.y &&
+        a_position.y + a_size.y > b_position.y
+	}
+}
+
+#[derive(Copy, Clone, PartialEq, Default)]
+pub struct Rigidbody2D {
+	pub velocity: Vec2,
+	pub gravity: Vec2,
+	pub friction: Vec2,
+	pub grounded: f32,
+	pub grounded_time: f32,
+}
+
+//TODO
 pub struct Button {}
 
+//TODO
 pub struct Slider {}
 
+//TODO
 pub struct SinWave {}
 
+//TODO
 pub struct Animation {}
 
+//TODO
 pub struct Animator {}
 
 #[derive(Default, Copy, Clone)]
@@ -44,20 +101,33 @@ impl RenderCamera {
 	}
 }
 
+//TODO
 pub struct Map {}
 
+//TODO
 pub struct ParticleSpawner {}
 
+//TODO
 pub struct Particle {}
 
+//TODO
 pub struct DropShadow {}
 
+//TODO
 pub struct RenderOffset {}
 
+//TODO
 pub struct RenderLayer {}
 
+//TODO
 pub struct Texture {}
 
-pub struct Rectangle {}
+pub struct Rectangle {
+	pub size: Vec2,
+	pub color: Color,
+}
 
-pub struct TextRenderer {}
+//TODO
+pub struct TextRenderer {
+	pub text: String,
+}
