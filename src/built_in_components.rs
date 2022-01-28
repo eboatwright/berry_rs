@@ -1,4 +1,15 @@
+use hecs::Entity;
+use hecs::World;
 use macroquad::prelude::*;
+
+#[derive(Copy, Clone, PartialEq)]
+pub struct Parent(pub u32);
+
+impl Parent {
+	pub fn get(&self, world: &mut World) -> Entity {
+		world.find_entity_from_id(self.0)
+	}
+}
 
 pub struct Transform {}
 
@@ -17,12 +28,12 @@ pub struct Animation {}
 pub struct Animator {}
 
 #[derive(Default, Copy, Clone)]
-pub struct Camera {
+pub struct RenderCamera {
 	pub position: Vec2,
 	pub zoom: f32,
 }
 
-impl Camera {
+impl RenderCamera {
 	pub fn get_mouse_position(&self) -> Vec2 {
 		let mut mouse_pos = vec2(mouse_position().0, mouse_position().1);
 		

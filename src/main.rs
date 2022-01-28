@@ -6,12 +6,13 @@ mod built_in_components;
 mod built_in_systems;
 mod master;
 mod resources;
-mod scene;
+
+mod game_scene;
 
 use crate::master::Master;
 use macroquad::prelude::*;
 use hecs::World;
-use crate::built_in_components::Camera;
+use crate::built_in_components::RenderCamera;
 
 const SCREEN_WIDTH: i32 = 960 / 1;
 const SCREEN_HEIGHT: i32 = 600 / 1;
@@ -36,20 +37,21 @@ async fn main() {
     let game_render_target = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
     let mut camera = Camera2D {
         zoom: vec2(1.0 / SCREEN_WIDTH as f32 * 2.0, 1.0 / SCREEN_HEIGHT as f32 * 2.0),
-        target: Vec2::ZERO,
         render_target: Some(game_render_target),
         ..Default::default()
     };
 
+    master.load_game_scene();
+
     loop {
         master.update();
 
-        let mut camera_pos = Vec2::ZERO;
-        for (_entity, camera) in &mut master.current_scene.world.query::<&Camera>() {
-            camera_pos = camera.position;
+        for (_entity, entity_camera) in &mut master.world.query::<&RenderCamera>() {
+            camera.target = entity_camera.position;
+            break;
         }
-        camera.target = camera_pos;
         set_camera(&camera);
+
         clear_background(DARKGRAY);
 
         master.render();
@@ -59,8 +61,9 @@ async fn main() {
         let game_diff_w = screen_width() / SCREEN_WIDTH as f32;
         let game_diff_h = screen_height() / SCREEN_HEIGHT as f32;
         let aspect_diff = game_diff_w.min(game_diff_h);
-        for (_entity, camera) in &mut master.current_scene.world.query::<&mut Camera>() {
+        for (_entity, camera) in &mut master.world.query::<&mut RenderCamera>() {
             camera.zoom = aspect_diff;
+            break;
         }
 
         let scaled_game_size_w = SCREEN_WIDTH as f32 * aspect_diff;

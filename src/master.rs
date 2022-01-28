@@ -1,12 +1,11 @@
-use crate::scene::Scene;
 use crate::resources::Resources;
+use macroquad::prelude::*;
 use crate::built_in_components::*;
 use crate::built_in_systems::*;
-use macroquad::prelude::*;
 use hecs::World;
 
 pub struct Master {
-	pub current_scene: Scene,
+	pub world: World,
 	pub render_order: Vec<&'static str>,
 	pub resources: Resources,
 }
@@ -14,7 +13,7 @@ pub struct Master {
 impl Default for Master {
 	fn default() -> Master {
 		Master {
-			current_scene: Scene::default(),
+			world: World::default(),
 			render_order: vec![
 				"default",
 				"particle",
