@@ -39,7 +39,7 @@ pub fn camera_update_system(master: &mut Master) {
 		if let Some(target) = master.world.find_entity_from_id(camera.target) {
 			let target_transform = master.world.get::<Transform>(target).unwrap();
 			transform.position = transform.position.lerp(
-				target_transform.position,
+				target_transform.position + camera.follow_offset,
 				camera.smoothing,
 			);
 		}

@@ -154,7 +154,7 @@ impl Default for Animator {
 #[derive(Copy, Clone)]
 pub struct RenderCamera {
 	pub target: u32,
-	pub target_offset: Vec2,
+	pub follow_offset: Vec2,
 	pub smoothing: f32,
 	pub zoom: f32,
 }
@@ -162,8 +162,8 @@ pub struct RenderCamera {
 impl Default for RenderCamera {
 	fn default() -> Self {
 		Self {
-			target: 0,
-			target_offset: Vec2::ZERO,
+			target: u32::MAX,
+			follow_offset: Vec2::ZERO,
 			smoothing: 1.0,
 			zoom: 0.0,
 		}
