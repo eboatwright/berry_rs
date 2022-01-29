@@ -11,7 +11,7 @@ mod game_scene;
 
 use crate::master::Master;
 use macroquad::prelude::*;
-use crate::built_in_components::RenderCamera;
+use crate::built_in_components::*;
 
 const SCREEN_WIDTH: i32 = 960 / 1;
 const SCREEN_HEIGHT: i32 = 600 / 1;
@@ -45,8 +45,8 @@ async fn main() {
     loop {
         master.update();
 
-        for (_entity, entity_camera) in &mut master.world.query::<&RenderCamera>() {
-            camera.target = entity_camera.position;
+        for (_entity, (transform, _camera)) in &mut master.world.query::<(&Transform, &RenderCamera)>() {
+            camera.target = transform.position;
             break;
         }
         set_camera(&camera);

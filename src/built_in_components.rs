@@ -4,6 +4,7 @@ use crate::Master;
 use hecs::Entity;
 use hecs::World;
 use macroquad::prelude::*;
+use macroquad::prelude::mouse_position as macroquad_mouse_position;
 
 #[derive(Copy, Clone, PartialEq, Default)]
 pub struct Parent(pub u32);
@@ -150,30 +151,39 @@ impl Default for Animator {
 	}
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct RenderCamera {
-	pub position: Vec2,
+	pub target: u32,
+	pub smoothing: f32,
 	pub zoom: f32,
 }
 
-impl RenderCamera {
-	pub fn mouse_position(&self) -> Vec2 {
-		let mut mouse_pos = vec2(mouse_position().0, mouse_position().1);
-		
-		mouse_pos.x = (mouse_pos.x - screen_width() / 2.0) / self.zoom + self.position.x;
-		mouse_pos.y = (mouse_pos.y - screen_height() / 2.0) / self.zoom + self.position.y;
-
-		mouse_pos
+impl Default for RenderCamera {
+	fn default() -> Self {
+		Self {
+			target: 0,
+			smoothing: 1.0,
+			zoom: 0.0,
+		}
 	}
+}
+
+pub fn mouse_position(transform: &Transform, camera: RenderCamera) -> Vec2 {
+	let mut mouse_pos = vec2(macroquad_mouse_position().0, macroquad_mouse_position().1);
+	
+	mouse_pos.x = (mouse_pos.x - screen_width() / 2.0) / camera.zoom + transform.position.x;
+	mouse_pos.y = (mouse_pos.y - screen_height() / 2.0) / camera.zoom + transform.position.y;
+
+	mouse_pos
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Map {
 	pub tile_size: u16,
 	pub tiles: Vec<Vec<u16>>,
-	pub special_collision: Vec<(BoxCollider2D, bool, bool, bool, bool)>,
-	pub colors: Vec<Color>,
-	pub y_source_offsets: Vec<f32>,
+	pub special_collision: HashMap<u16, (BoxCollider2D, bool, bool, bool, bool)>,
+	pub colors: HashMap<u16, Color>,
+	pub y_source_offsets: HashMap<u16, f32>,
 }
 
 impl Default for Map {
@@ -181,9 +191,9 @@ impl Default for Map {
 		Self {
 			tile_size: 16,
 			tiles: Vec::new(),
-			special_collision: Vec::new(),
-			colors: Vec::new(),
-			y_source_offsets: Vec::new(),
+			special_collision: HashMap::new(),
+			colors: HashMap::new(),
+			y_source_offsets: HashMap::new(),
 		}
 	}
 }

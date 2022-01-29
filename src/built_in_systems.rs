@@ -1,3 +1,5 @@
+use crate::SCREEN_WIDTH;
+use crate::SCREEN_HEIGHT;
 use crate::Master;
 use macroquad::prelude::*;
 use crate::built_in_components::*;
@@ -32,9 +34,8 @@ pub fn particle_update_system(master: &mut Master) {
 	}
 }
 
-//TODO
 pub fn camera_update_system(master: &mut Master) {
-	for (_entity, ()) in &mut master.world.query::<()>() {
+	for (_entity, (transform, camera)) in &mut master.world.query::<(&mut Transform, &RenderCamera)>() {
 	}
 }
 
@@ -59,10 +60,48 @@ pub fn texture_render_system(master: &Master, layer: &'static str) {
 	}
 }
 
-//TODO
 pub fn map_render_system(master: &Master, layer: &'static str) {
-	for (_entity, (transform, render_layer)) in &mut master.world.query::<(&Transform, &RenderLayer)>() {
+	let mut camera_pos = Vec2::ZERO;
+	for (_entity, (transform, _camera)) in &mut master.world.query::<(&Transform, &RenderCamera)>() {
+		camera_pos = transform.position;
+	}
+	for (_entity, (map, texture, render_layer)) in &mut master.world.query::<(&Map, &Texture, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			for y in 0..map.tiles.len() {
+				for x in 0..map.tiles[0].len() {
+					if map.tiles[y][x] != 0
+					&& (y as f32 + 1.0) * map.tile_size as f32 > camera_pos.y - SCREEN_HEIGHT as f32 * 0.5
+					&& y as f32 * (map.tile_size as f32) < camera_pos.y + SCREEN_HEIGHT as f32 * 0.5
+					&& (x as f32 + 1.0) * map.tile_size as f32 > camera_pos.x - SCREEN_WIDTH as f32 * 0.5
+					&& x as f32 * (map.tile_size as f32) < camera_pos.x + SCREEN_WIDTH as f32 * 0.5 {
+						draw_texture_ex(
+							texture.texture,
+							x as f32 * map.tile_size as f32,
+							y as f32 * map.tile_size as f32,
+							match map.colors.get(&(map.tiles[y][x] - 1)) {
+								Some(color) => *color,
+								None => WHITE,
+							},
+							DrawTextureParams {
+								dest_size: Some(vec2(map.tile_size as f32, map.tile_size as f32)),
+								source: Some(Rect {
+									x: (map.tiles[y][x] - 1) as f32 * map.tile_size as f32,
+									y: match map.y_source_offsets.get(&(map.tiles[y][x] - 1)) {
+										Some(y) => *y,
+										None => 0.0,
+									},
+									w: map.tile_size as f32,
+									h: map.tile_size as f32,
+								}),
+								rotation: 0.0,
+								flip_x: false,
+								flip_y: false,
+								pivot: None,
+							},
+						);
+					}
+				}
+			}
 		}
 	}
 }
