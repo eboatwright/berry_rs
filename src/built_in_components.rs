@@ -10,7 +10,7 @@ use macroquad::prelude::mouse_position as macroquad_mouse_position;
 pub struct Parent(pub u32);
 
 impl Parent {
-	pub fn get(&self, world: &mut World) -> Entity {
+	pub fn get(&self, world: &mut World) -> Option<Entity> {
 		world.find_entity_from_id(self.0)
 	}
 }
@@ -154,6 +154,7 @@ impl Default for Animator {
 #[derive(Copy, Clone)]
 pub struct RenderCamera {
 	pub target: u32,
+	pub target_offset: Vec2,
 	pub smoothing: f32,
 	pub zoom: f32,
 }
@@ -162,6 +163,7 @@ impl Default for RenderCamera {
 	fn default() -> Self {
 		Self {
 			target: 0,
+			target_offset: Vec2::ZERO,
 			smoothing: 1.0,
 			zoom: 0.0,
 		}

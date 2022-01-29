@@ -36,6 +36,13 @@ pub fn particle_update_system(master: &mut Master) {
 
 pub fn camera_update_system(master: &mut Master) {
 	for (_entity, (transform, camera)) in &mut master.world.query::<(&mut Transform, &RenderCamera)>() {
+		if let Some(target) = master.world.find_entity_from_id(camera.target) {
+			let target_transform = master.world.get::<Transform>(target).unwrap();
+			transform.position = transform.position.lerp(
+				target_transform.position,
+				camera.smoothing,
+			);
+		}
 	}
 }
 
