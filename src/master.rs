@@ -26,7 +26,7 @@ impl Default for Master {
 
 impl Master {
 	pub fn update(&mut self) {
-		rigidbody2d_update_system(self);
+		rigidbody_update_system(self);
 		button_update_system(self);
 		slider_update_system(self);
 		animator_update_system(self);

@@ -47,8 +47,7 @@ impl Default for BoxCollider2D {
 }
 
 impl BoxCollider2D {
-	pub fn overlaps(a: (&BoxCollider2D, &Transform),
-					b: (&BoxCollider2D, &Transform)) -> bool {
+	pub fn overlaps(a: (&BoxCollider2D, &Transform), b: (&BoxCollider2D, &Transform)) -> bool {
 		let a_position = a.1.position + a.0.offset;
 		let a_size = a.0.size * a.1.scale;
 
@@ -98,9 +97,20 @@ pub struct Button {
 	pub shadow_color: Color,
 }
 
-//TODO
-#[derive(Copy, Clone, PartialEq, Default)]
-pub struct Slider {}
+#[derive(Copy, Clone, PartialEq)]
+pub struct Slider {
+	pub limits: Vec2,
+	pub vertical: bool,
+}
+
+impl Default for Slider {
+	fn default() -> Self {
+		Self {
+			limits: vec2(-20.0, 20.0),
+			vertical: false,
+		}
+	}
+}
 
 #[derive(Clone, PartialEq)]
 pub struct Animation {
