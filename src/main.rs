@@ -45,7 +45,7 @@ async fn main() {
     loop {
         master.update();
 
-        for (_entity, (transform, _camera)) in &mut master.world.query::<(&Transform, &RenderCamera)>() {
+        for (_entity, transform) in &mut master.world.query::<&Transform>().with::<RenderCamera>() {
             camera.target = transform.position;
             break;
         }

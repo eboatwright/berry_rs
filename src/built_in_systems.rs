@@ -1,3 +1,5 @@
+use macroquad::rand::gen_range;
+use hecs::Entity;
 use crate::SCREEN_WIDTH;
 use crate::SCREEN_HEIGHT;
 use crate::Master;
@@ -22,15 +24,66 @@ pub fn slider_update_system(master: &mut Master) {
 	}
 }
 
-//TODO
 pub fn animator_update_system(master: &mut Master) {
-	for (_entity, ()) in &mut master.world.query::<()>() {
+	for (entity, animator) in &mut master.world.query::<&mut Animator>() {
+		animator.timer -= delta_time();
+		if animator.timer <= 0.0 {
+			animator.timer = animator.current_animation.frame_duration;
+			animator.current_frame_index += 1;
+			if animator.current_frame_index >= animator.current_animation.frames.len() {
+				if !animator.dont_interrupt {
+					animator.current_frame_index = 0;
+				} else {
+					animator.current_frame_index -= 1;
+				}
+				animator.dont_interrupt = false;
+			}
+			if master.world.get::<DontAnimateTexture>(entity).is_err() {
+				if let Ok(mut texture) = master.world.get_mut::<Texture>(entity) {
+					texture.source = Some(Rect {
+						x: animator.get_frame() * texture.get_size().x,
+						..texture.source.unwrap()
+					});
+				}
+			}
+		}
 	}
 }
 
-//TODO
 pub fn particle_update_system(master: &mut Master) {
-	for (_entity, ()) in &mut master.world.query::<()>() {
+	let mut to_spawn: Vec<(Transform, Rigidbody, Particle, Texture, RenderLayer)> = Vec::new();
+	for (_entity, (transform, particle_spawner)) in &mut master.world.query::<(&Transform, &mut ParticleSpawner)>() {
+		particle_spawner.spawn_timer -= delta_time();
+		if particle_spawner.spawn_timer <= 0.0 {
+			particle_spawner.spawn_timer = particle_spawner.spawn_rate;
+			to_spawn.push((
+				Transform {
+					position: transform.position + vec2(gen_range(particle_spawner.min_spawn_offset.x, particle_spawner.max_spawn_offset.x), gen_range(particle_spawner.min_spawn_offset.y, particle_spawner.max_spawn_offset.y)),
+					..Default::default()
+				},
+				Rigidbody {
+					velocity: vec2(gen_range(particle_spawner.min_velocity.x, particle_spawner.max_velocity.x), gen_range(particle_spawner.min_velocity.y, particle_spawner.max_velocity.y)),
+					..particle_spawner.particle_rigidbody
+				},
+				Particle {
+					life: particle_spawner.particle_life,
+				},
+				particle_spawner.particle_texture,
+				RenderLayer("particle".to_string()),
+			));
+		}
+	}
+	master.world.spawn_batch(to_spawn);
+
+	let mut to_destroy: Vec<Entity> = Vec::new();
+	for (entity, particle) in &mut master.world.query::<&mut Particle>() {
+		particle.life -= delta_time();
+		if particle.life <= 0.0 {
+			to_destroy.push(entity);
+		}
+	}
+	for entity in to_destroy {
+		master.world.despawn(entity).unwrap();
 	}
 }
 
@@ -49,13 +102,24 @@ pub fn camera_update_system(master: &mut Master) {
 pub fn texture_render_system(master: &Master, layer: &'static str) {
 	for (_entity, (transform, texture, render_layer)) in &mut master.world.query::<(&Transform, &Texture, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			let x_pos = transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0;
+			let y_pos = transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0;
+
+			let camera_bounds = camera_bounds(&master.world);
+			if transform.position.x + texture.get_size().x * transform.scale.x.abs() < camera_bounds.x
+			|| transform.position.x > camera_bounds.w
+			|| transform.position.y + texture.get_size().y * transform.scale.y.abs() < camera_bounds.y
+			|| transform.position.y > camera_bounds.h {
+				continue;
+			}
+
 			draw_texture_ex(
 				texture.texture,
-				transform.position.x.round(),
-				transform.position.y.round(),
+				x_pos.round(),
+				y_pos.round(),
 				texture.color,
 				DrawTextureParams {
-					dest_size: Some(texture.get_size()),
+					dest_size: Some(texture.get_size() * transform.scale),
 					source: texture.source,
 					rotation: transform.rotation,
 					flip_x: false,

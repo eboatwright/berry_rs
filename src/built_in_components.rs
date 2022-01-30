@@ -1,3 +1,5 @@
+use crate::SCREEN_WIDTH;
+use crate::SCREEN_HEIGHT;
 use std::collections::HashMap;
 use macroquad::audio::Sound;
 use crate::Master;
@@ -113,11 +115,14 @@ impl Default for Slider {
 	}
 }
 
+pub struct DontAnimateTexture;
+
 #[derive(Clone, PartialEq)]
 pub struct Animation {
 	pub name: &'static str,
 	pub frames: Vec<usize>,
 	pub frame_duration: f32,
+	pub dont_interrupt: bool,
 }
 
 impl Default for Animation {
@@ -126,28 +131,52 @@ impl Default for Animation {
 			name: "animation",
 			frames: vec![],
 			frame_duration: 1.0,
+			dont_interrupt: false,
 		}
 	}
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Animator {
+	pub timer: f32,
 	pub animations: Vec<Animation>,
 	pub current_animation: Animation,
 	pub current_frame_index: usize,
 	pub dont_interrupt: bool,
-	frame_timer: f32,
 }
 
 impl Default for Animator {
 	fn default() -> Self {
 		Self {
+			timer: 0.0,
 			animations: Vec::new(),
 			current_animation: Animation::default(),
 			current_frame_index: 0,
 			dont_interrupt: false,
-			frame_timer: 0.0,
 		}
+	}
+}
+
+impl Animator {
+	pub fn change_animation(&mut self, name: &'static str) {
+		if !self.dont_interrupt
+		&& name != self.current_animation.name {
+			for animation in self.animations.iter() {
+				if animation.name == name {
+					self.dont_interrupt = animation.dont_interrupt;
+
+					self.current_animation = animation.clone();
+					self.current_frame_index = 0;
+					self.timer = 0.0;
+
+					return;
+				}
+			}
+		}
+	}
+
+	pub fn get_frame(&self) -> f32 {
+		self.current_animation.frames[self.current_frame_index] as f32
 	}
 }
 
@@ -170,13 +199,28 @@ impl Default for RenderCamera {
 	}
 }
 
-pub fn mouse_position(transform: &Transform, camera: RenderCamera) -> Vec2 {
-	let mut mouse_pos = vec2(macroquad_mouse_position().0, macroquad_mouse_position().1);
+pub fn mouse_position(world: &World) -> Vec2 {
+	for (_entity, (transform, camera)) in &mut world.query::<(&Transform, &RenderCamera)>() {
+		let mut mouse_pos = vec2(macroquad_mouse_position().0, macroquad_mouse_position().1);
 	
-	mouse_pos.x = (mouse_pos.x - screen_width() / 2.0) / camera.zoom + transform.position.x;
-	mouse_pos.y = (mouse_pos.y - screen_height() / 2.0) / camera.zoom + transform.position.y;
+		mouse_pos.x = (mouse_pos.x - screen_width() / 2.0) / camera.zoom + transform.position.x;
+		mouse_pos.y = (mouse_pos.y - screen_height() / 2.0) / camera.zoom + transform.position.y;
 
-	mouse_pos
+		return mouse_pos;
+	}
+	panic!("'mouse_position' error: no camera!");
+}
+
+pub fn camera_bounds(world: &World) -> Rect {
+	for (_entity, transform) in &mut world.query::<&Transform>().with::<RenderCamera>() {
+		return Rect {
+			x: transform.position.x - SCREEN_WIDTH as f32 / 2.0,
+			y: transform.position.y - SCREEN_HEIGHT as f32 / 2.0,
+			w: transform.position.x + SCREEN_WIDTH as f32 / 2.0,
+			h: transform.position.y + SCREEN_HEIGHT as f32 / 2.0,
+		};
+	}
+	panic!("'camera_bounds' error: no camera!");
 }
 
 #[derive(Clone, PartialEq)]
@@ -286,7 +330,7 @@ impl Default for Texture {
 impl Texture {
 	pub fn get_size(&self) -> Vec2 {
 		return if let Some(source) = self.source {
-			vec2(source.w, source.h)
+			source.size()
 		} else {
 			vec2(self.texture.width(), self.texture.height())
 		};
