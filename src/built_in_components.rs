@@ -34,12 +34,12 @@ impl Default for Transform {
 }
 
 #[derive(Copy, Clone, PartialEq)]
-pub struct BoxCollider2D {
+pub struct BoxCollider {
 	pub size: Vec2,
 	pub offset: Vec2,
 }
 
-impl Default for BoxCollider2D {
+impl Default for BoxCollider {
 	fn default() -> Self {
 		Self {
 			size: Vec2::ONE,
@@ -48,8 +48,8 @@ impl Default for BoxCollider2D {
 	}
 }
 
-impl BoxCollider2D {
-	pub fn overlaps(a: (&BoxCollider2D, &Transform), b: (&BoxCollider2D, &Transform)) -> bool {
+impl BoxCollider {
+	pub fn overlaps(a: (&BoxCollider, &Transform), b: (&BoxCollider, &Transform)) -> bool {
 		let a_position = a.1.position + a.0.offset;
 		let a_size = a.0.size * a.1.scale;
 
@@ -236,7 +236,7 @@ pub fn rect_in_screen(world: &World, rect: Rect) -> bool {
 pub struct Map {
 	pub tile_size: u16,
 	pub tiles: Vec<Vec<u16>>,
-	pub special_collision: HashMap<u16, (BoxCollider2D, bool, bool, bool, bool)>,
+	pub special_collision: HashMap<u16, (BoxCollider, bool, bool, bool, bool)>,
 	pub colors: HashMap<u16, Color>,
 	pub y_source_offsets: HashMap<u16, f32>,
 }

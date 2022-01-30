@@ -8,13 +8,20 @@ use crate::built_in_components::*;
 
 //TODO
 pub fn rigidbody_update_system(master: &mut Master) {
-	for (_entity, ()) in &mut master.world.query::<()>() {
+	for (_entity, (transform, rigidbody)) in &mut master.world.query::<(&mut Transform, &mut Rigidbody)>() {
+		//rigidbody movement x
+		//rigidbody map collision x
+		//rigidbody entity collision x
+
+		//rigidbody movement y
+		//rigidbody map collision y
+		//rigidbody entity collision y
 	}
 }
 
 //TODO
 pub fn button_update_system(master: &mut Master) {
-	for (_entity, ()) in &mut master.world.query::<()>() {
+	for (_entity, (transform, collider, button)) in &mut master.world.query::<(&Transform, &BoxCollider, &mut Button)>() {
 	}
 }
 
