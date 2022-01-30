@@ -99,27 +99,74 @@ pub fn camera_update_system(master: &mut Master) {
 	}
 }
 
-pub fn texture_render_system(master: &Master, layer: &'static str) {
-	for (_entity, (transform, texture, render_layer)) in &mut master.world.query::<(&Transform, &Texture, &RenderLayer)>() {
-		if layer == render_layer.0 {
-			let x_pos = transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0;
-			let y_pos = transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0;
-
-			let camera_bounds = camera_bounds(&master.world);
-			if transform.position.x + texture.get_size().x * transform.scale.x.abs() < camera_bounds.x
-			|| transform.position.x > camera_bounds.w
-			|| transform.position.y + texture.get_size().y * transform.scale.y.abs() < camera_bounds.y
-			|| transform.position.y > camera_bounds.h {
+pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
+	if layer == "shadow" {
+		for (_entity, (transform, drop_shadow, texture)) in &mut master.world.query::<(&Transform, &DropShadow, &Texture)>() {
+			if !rect_in_screen(&master.world, Rect {
+				x: (transform.position.x + drop_shadow.offset.x).round(),
+				y: (transform.position.y + drop_shadow.offset.y).round(),
+				w: (texture.get_size().x * transform.scale.x.abs()).round(),
+				h: (texture.get_size().y * transform.scale.y.abs()).round(),
+			}) {
 				continue;
 			}
 
 			draw_texture_ex(
 				texture.texture,
-				x_pos.round(),
-				y_pos.round(),
-				texture.color,
+				(transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0).round(),
+				(transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0).round(),
+				drop_shadow.color,
 				DrawTextureParams {
 					dest_size: Some(texture.get_size() * transform.scale),
+					source: texture.source,
+					rotation: transform.rotation,
+					flip_x: false,
+					flip_y: false,
+					pivot: None,
+				}
+			);
+		}
+
+		for (_entity, (transform, drop_shadow, rectangle)) in &mut master.world.query::<(&Transform, &DropShadow, &Rectangle)>() {
+			if !rect_in_screen(&master.world, Rect {
+				x: (transform.position.x + drop_shadow.offset.x).round(),
+				y: (transform.position.y + drop_shadow.offset.y).round(),
+				w: (rectangle.size.x * transform.scale.x).round(),
+				h: (rectangle.size.y * transform.scale.y).round(),
+			}) {
+				continue;
+			}
+
+			draw_rectangle(
+				transform.position.x.round(),
+				transform.position.y.round(),
+				(rectangle.size.x * transform.scale.x).round(),
+				(rectangle.size.y * transform.scale.y).round(),
+				rectangle.color,
+			);
+		}
+	}
+}
+
+pub fn texture_render_system(master: &Master, layer: &'static str) {
+	for (_entity, (transform, texture, render_layer)) in &mut master.world.query::<(&Transform, &Texture, &RenderLayer)>() {
+		if layer == render_layer.0 {
+			if !rect_in_screen(&master.world, Rect {
+				x: transform.position.x.round(),
+				y: transform.position.y.round(),
+				w: (texture.get_size().x * transform.scale.x.abs()).round(),
+				h: (texture.get_size().y * transform.scale.y.abs()).round(),
+			}) {
+				continue;
+			}
+
+			draw_texture_ex(
+				texture.texture,
+				(transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0).round(),
+				(transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0).round(),
+				texture.color,
+				DrawTextureParams {
+					dest_size: Some((texture.get_size() * transform.scale).round()),
 					source: texture.source,
 					rotation: transform.rotation,
 					flip_x: false,
@@ -132,19 +179,17 @@ pub fn texture_render_system(master: &Master, layer: &'static str) {
 }
 
 pub fn map_render_system(master: &Master, layer: &'static str) {
-	let mut camera_pos = Vec2::ZERO;
-	for (_entity, (transform, _camera)) in &mut master.world.query::<(&Transform, &RenderCamera)>() {
-		camera_pos = transform.position;
-	}
 	for (_entity, (map, texture, render_layer)) in &mut master.world.query::<(&Map, &Texture, &RenderLayer)>() {
 		if layer == render_layer.0 {
 			for y in 0..map.tiles.len() {
 				for x in 0..map.tiles[0].len() {
 					if map.tiles[y][x] != 0
-					&& (y as f32 + 1.0) * map.tile_size as f32 > camera_pos.y - SCREEN_HEIGHT as f32 * 0.5
-					&& y as f32 * (map.tile_size as f32) < camera_pos.y + SCREEN_HEIGHT as f32 * 0.5
-					&& (x as f32 + 1.0) * map.tile_size as f32 > camera_pos.x - SCREEN_WIDTH as f32 * 0.5
-					&& x as f32 * (map.tile_size as f32) < camera_pos.x + SCREEN_WIDTH as f32 * 0.5 {
+					&& rect_in_screen(&master.world, Rect {
+						x: x as f32 * map.tile_size as f32,
+						y: y as f32 * map.tile_size as f32,
+						w: map.tile_size as f32,
+						h: map.tile_size as f32,
+					}) {
 						draw_texture_ex(
 							texture.texture,
 							x as f32 * map.tile_size as f32,
@@ -180,6 +225,15 @@ pub fn map_render_system(master: &Master, layer: &'static str) {
 pub fn rectangle_render_system(master: &Master, layer: &'static str) {
 	for (_entity, (transform, rectangle, render_layer)) in &mut master.world.query::<(&Transform, &Rectangle, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			if !rect_in_screen(&master.world, Rect {
+				x: transform.position.x.round(),
+				y: transform.position.y.round(),
+				w: rectangle.size.x.round(),
+				h: rectangle.size.y.round(),
+			}) {
+				continue;
+			}
+
 			draw_rectangle(
 				transform.position.x.round(),
 				transform.position.y.round(),
@@ -199,8 +253,8 @@ pub fn text_render_system(master: &Master, layer: &'static str) {
 				transform.position.x.round(),
 				transform.position.y.round(),
 				TextParams {
-					font_scale: text.params.font_scale * transform.scale.y,
-					font_scale_aspect: text.params.font_scale_aspect * transform.scale.x / transform.scale.y,
+					font_scale: (text.params.font_scale * transform.scale.y).round(),
+					font_scale_aspect: (text.params.font_scale_aspect * transform.scale.x / transform.scale.y).round(),
 					..text.params
 				},
 			);

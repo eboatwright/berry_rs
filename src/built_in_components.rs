@@ -223,6 +223,14 @@ pub fn camera_bounds(world: &World) -> Rect {
 	panic!("'camera_bounds' error: no camera!");
 }
 
+pub fn rect_in_screen(world: &World, rect: Rect) -> bool {
+	let camera_bounds = camera_bounds(&world);
+	!(rect.x + rect.w < camera_bounds.x
+	|| rect.x > camera_bounds.w
+	|| rect.y + rect.h < camera_bounds.y
+	|| rect.y > camera_bounds.h)
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Map {
 	pub tile_size: u16,
