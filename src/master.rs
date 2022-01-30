@@ -15,6 +15,7 @@ impl Default for Master {
 		Master {
 			world: World::default(),
 			render_order: vec![
+				"shadow",
 				"default",
 				"particle",
 				"ui",
@@ -36,6 +37,7 @@ impl Master {
 
 	pub fn render(&self) {
 		for layer in self.render_order.iter() {
+			drop_shadow_render_system(self, layer);
 			texture_render_system(self, layer);
 			map_render_system(self, layer);
 			rectangle_render_system(self, layer);

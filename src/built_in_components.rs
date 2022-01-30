@@ -6,7 +6,6 @@ use crate::Master;
 use hecs::Entity;
 use hecs::World;
 use macroquad::prelude::*;
-use macroquad::prelude::mouse_position as macroquad_mouse_position;
 
 #[derive(Copy, Clone, PartialEq, Default)]
 pub struct Parent(pub u32);
@@ -104,6 +103,7 @@ pub struct Button {
 pub struct Slider {
 	pub limits: Vec2,
 	pub vertical: bool,
+	pub dragging: bool,
 }
 
 impl Default for Slider {
@@ -111,6 +111,7 @@ impl Default for Slider {
 		Self {
 			limits: vec2(-20.0, 20.0),
 			vertical: false,
+			dragging: false,
 		}
 	}
 }
@@ -199,9 +200,9 @@ impl Default for RenderCamera {
 	}
 }
 
-pub fn mouse_position(world: &World) -> Vec2 {
+pub fn get_mouse_position(world: &World) -> Vec2 {
 	for (_entity, (transform, camera)) in &mut world.query::<(&Transform, &RenderCamera)>() {
-		let mut mouse_pos = vec2(macroquad_mouse_position().0, macroquad_mouse_position().1);
+		let mut mouse_pos = vec2(mouse_position().0, mouse_position().1);
 	
 		mouse_pos.x = (mouse_pos.x - screen_width() / 2.0) / camera.zoom + transform.position.x;
 		mouse_pos.y = (mouse_pos.y - screen_height() / 2.0) / camera.zoom + transform.position.y;

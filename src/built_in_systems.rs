@@ -18,9 +18,25 @@ pub fn button_update_system(master: &mut Master) {
 	}
 }
 
-//TODO
 pub fn slider_update_system(master: &mut Master) {
-	for (_entity, ()) in &mut master.world.query::<()>() {
+	for (_entity, (transform, button, slider)) in &mut master.world.query::<(&mut Transform, &Button, &mut Slider)>() {
+		if button.hovering_over
+		&& is_mouse_button_down(MouseButton::Left) {
+			slider.dragging = true;
+		}
+
+		if is_mouse_button_released(MouseButton::Left) {
+			slider.dragging = false;
+		}
+
+		let mouse_pos = get_mouse_position(&master.world);
+		if slider.dragging {
+			if slider.vertical {
+				transform.position.y = mouse_pos.y;
+			} else {
+				transform.position.x = mouse_pos.x;
+			}
+		}
 	}
 }
 
