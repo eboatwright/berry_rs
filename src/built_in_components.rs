@@ -63,6 +63,9 @@ impl BoxCollider {
 	}
 }
 
+pub struct DontCollideWithMap;
+pub struct Static;
+
 #[derive(Copy, Clone, PartialEq, Default)]
 pub struct Rigidbody {
 	pub velocity: Vec2,

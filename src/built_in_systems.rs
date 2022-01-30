@@ -9,13 +9,17 @@ use crate::built_in_components::*;
 //TODO
 pub fn rigidbody_update_system(master: &mut Master) {
 	for (_entity, (transform, rigidbody)) in &mut master.world.query::<(&mut Transform, &mut Rigidbody)>() {
-		//rigidbody movement x
-		//rigidbody map collision x
-		//rigidbody entity collision x
+		rigidbody.velocity.x += rigidbody.gravity.x;
+		rigidbody.velocity.x *= rigidbody.friction.x;
+		transform.position.x += rigidbody.velocity.x;
+		//map collision
+		//entity collisions
 
-		//rigidbody movement y
-		//rigidbody map collision y
-		//rigidbody entity collision y
+		rigidbody.velocity.y += rigidbody.gravity.y;
+		rigidbody.velocity.y *= rigidbody.friction.y;
+		transform.position.y += rigidbody.velocity.y;
+		//map collision
+		//entity collision
 	}
 }
 
