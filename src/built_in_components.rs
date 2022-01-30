@@ -238,7 +238,7 @@ pub fn rect_in_screen(world: &World, rect: Rect) -> bool {
 pub struct Map {
 	pub tile_size: u16,
 	pub tiles: Vec<Vec<u16>>,
-	pub special_collision: HashMap<u16, (BoxCollider, bool, bool, bool, bool)>,
+	pub collisions: HashMap<u16, (BoxCollider, bool, bool, bool, bool)>,
 	pub colors: HashMap<u16, Color>,
 	pub y_source_offsets: HashMap<u16, f32>,
 }
@@ -248,7 +248,7 @@ impl Default for Map {
 		Self {
 			tile_size: 16,
 			tiles: Vec::new(),
-			special_collision: HashMap::new(),
+			collisions: HashMap::new(),
 			colors: HashMap::new(),
 			y_source_offsets: HashMap::new(),
 		}

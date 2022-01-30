@@ -15,6 +15,46 @@ pub fn rigidbody_update_system(master: &mut Master) {
 
 		if let Ok(collider) = master.world.get::<BoxCollider>(entity) {
 			for (_entity, map) in &mut master.world.query::<&Map>() {
+				let mut tile_transform = Transform::default();
+				let mut tile_collision: (BoxCollider, bool, bool, bool, bool);
+
+				let tile_pos = transform.position / map.tile_size as f32;
+				let tile_vel = rigidbody.velocity / map.tile_size as f32;
+
+				for y in clamp(0.0, tile_pos.y - tile_vel.y, map.tiles.len() as f32 - 1.0) as usize..clamp(0.0, tile_pos.y + tile_vel.y, map.tiles.len() as f32 - 1.0) as usize {
+					for x in clamp(0.0, tile_pos.x - tile_vel.x, map.tiles[0].len() as f32 - 1.0) as usize..clamp(0.0, tile_pos.x + tile_vel.x, map.tiles[0].len() as f32 - 1.0) as usize {
+						if map.tiles[y][x] != 0 {
+							tile_transform.position = vec2(x as f32, y as f32) * map.tile_size as f32;
+							tile_collision = match map.collisions.get(&map.tiles[y][x]) {
+								Some(collision) => {
+									*collision
+								},
+								None => (BoxCollider {
+									size: vec2(map.tile_size as f32, map.tile_size as f32),
+									offset: Vec2::ZERO,
+								}, true, true, true, true),
+							};
+							if BoxCollider::overlaps((&collider, transform), (&tile_collision.0, &tile_transform)) {
+								if rigidbody.velocity.x < 0.0
+								&& tile_collision.3 {
+									rigidbody.velocity.x = 0.0;
+									transform.position.x = tile_transform.position.x + tile_collision.0.size.x - collider.offset.x + tile_collision.0.offset.x;
+									if rigidbody.gravity.x < 0.0 {
+										rigidbody.grounded = rigidbody.grounded_time;
+									}
+								}
+								if rigidbody.velocity.x > 0.0
+								&& tile_collision.4 {
+									rigidbody.velocity.x = 0.0;
+									transform.position.x = tile_transform.position.x - collider.size.x - collider.offset.x + tile_collision.0.offset.x;
+									if rigidbody.gravity.x > 0.0 {
+										rigidbody.grounded = rigidbody.grounded_time;
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 
 			//entity collisions
