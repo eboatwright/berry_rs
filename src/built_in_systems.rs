@@ -10,19 +10,18 @@ use crate::built_in_components::*;
 pub fn rigidbody_update_system(master: &mut Master) {
 	for (entity, (transform, rigidbody)) in &mut master.world.query::<(&mut Transform, &mut Rigidbody)>().without::<Static>() {
 		rigidbody.velocity.x += rigidbody.gravity.x;
-		rigidbody.velocity.x *= rigidbody.friction.x;
+		rigidbody.velocity.x *= 1.0 - rigidbody.friction.x;
 		transform.position.x += rigidbody.velocity.x;
 
 		if let Ok(collider) = master.world.get::<BoxCollider>(entity) {
 			for (_entity, map) in &mut master.world.query::<&Map>() {
 				let mut tile_transform = Transform::default();
 				let mut tile_collision: (BoxCollider, bool, bool, bool, bool);
+				let tile_pos = transform.position.round() / map.tile_size as f32;
 
-				let tile_pos = transform.position / map.tile_size as f32;
-				let tile_vel = rigidbody.velocity / map.tile_size as f32;
-
-				for y in clamp(0.0, tile_pos.y - tile_vel.y, map.tiles.len() as f32 - 1.0) as usize..clamp(0.0, tile_pos.y + tile_vel.y, map.tiles.len() as f32 - 1.0) as usize {
-					for x in clamp(0.0, tile_pos.x - tile_vel.x, map.tiles[0].len() as f32 - 1.0) as usize..clamp(0.0, tile_pos.x + tile_vel.x, map.tiles[0].len() as f32 - 1.0) as usize {
+				for y in clamp(tile_pos.y - 10.0, 0.0, map.tiles.len() as f32) as usize..clamp(tile_pos.y + 10.0, 0.0, map.tiles.len() as f32) as usize {
+					for x in clamp(tile_pos.x - 10.0, 0.0, map.tiles[0].len() as f32) as usize..clamp(tile_pos.x + 10.0, 0.0, map.tiles[0].len() as f32) as usize {
+						println!("{}, {}", x, y);
 						if map.tiles[y][x] != 0 {
 							tile_transform.position = vec2(x as f32, y as f32) * map.tile_size as f32;
 							tile_collision = match map.collisions.get(&map.tiles[y][x]) {
@@ -61,19 +60,17 @@ pub fn rigidbody_update_system(master: &mut Master) {
 		}
 
 		rigidbody.velocity.y += rigidbody.gravity.y;
-		rigidbody.velocity.y *= rigidbody.friction.y;
+		rigidbody.velocity.y *= 1.0 - rigidbody.friction.y;
 		transform.position.y += rigidbody.velocity.y;
 
 		if let Ok(collider) = master.world.get::<BoxCollider>(entity) {
 			for (_entity, map) in &mut master.world.query::<&Map>() {
 				let mut tile_transform = Transform::default();
 				let mut tile_collision: (BoxCollider, bool, bool, bool, bool);
+				let tile_pos = transform.position.round() / map.tile_size as f32;
 
-				let tile_pos = transform.position / map.tile_size as f32;
-				let tile_vel = rigidbody.velocity / map.tile_size as f32;
-
-				for y in clamp(0.0, tile_pos.y - tile_vel.y, map.tiles.len() as f32 - 1.0) as usize..clamp(0.0, tile_pos.y + tile_vel.y, map.tiles.len() as f32 - 1.0) as usize {
-					for x in clamp(0.0, tile_pos.x - tile_vel.x, map.tiles[0].len() as f32 - 1.0) as usize..clamp(0.0, tile_pos.x + tile_vel.x, map.tiles[0].len() as f32 - 1.0) as usize {
+				for y in clamp(tile_pos.y - 10.0, 0.0, map.tiles.len() as f32 - 1.0) as usize..clamp(tile_pos.y + 10.0, 0.0, map.tiles.len() as f32 - 1.0) as usize {
+					for x in clamp(tile_pos.x - 10.0, 0.0, map.tiles[0].len() as f32 - 1.0) as usize..clamp(tile_pos.x + 10.0, 0.0, map.tiles[0].len() as f32 - 1.0) as usize {
 						if map.tiles[y][x] != 0 {
 							tile_transform.position = vec2(x as f32, y as f32) * map.tile_size as f32;
 							tile_collision = match map.collisions.get(&map.tiles[y][x]) {
