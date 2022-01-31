@@ -1,3 +1,5 @@
+use macroquad::audio::play_sound;
+use macroquad::audio::PlaySoundParams;
 use macroquad::rand::gen_range;
 use hecs::Entity;
 use crate::SCREEN_WIDTH;
@@ -143,9 +145,52 @@ pub fn rigidbody_update_system(master: &mut Master) {
 	}
 }
 
-//TODO
 pub fn button_update_system(master: &mut Master) {
-	for (_entity, (transform, collider, button)) in &mut master.world.query::<(&Transform, &BoxCollider, &mut Button)>() {
+	let mut functions: Vec<(ButtonClickFunction, Entity)> = Vec::new();
+	let mouse_pos = get_mouse_position(&master.world);
+	for (entity, (transform, collider, button)) in &mut master.world.query::<(&Transform, &BoxCollider, &mut Button)>() {
+		button.hovering_over = BoxCollider::overlaps(
+			(collider, transform),
+			(&BoxCollider {
+				size: Vec2::ONE,
+				..Default::default()
+			}, &Transform {
+				position: mouse_pos,
+				..Default::default()
+			}),
+		);
+		let mut offset = Vec2::ZERO;
+		let mut shadow_offset = Vec2::ZERO;
+		if button.hovering_over {
+			if !button.played_select_sfx {
+				button.played_select_sfx = true;
+				if let Some(sfx) = button.select_sfx {
+					play_sound(sfx, PlaySoundParams {
+						looped: false,
+						volume: 1.0,
+					});
+				}
+			}
+			offset = button.highlight_offset;
+			shadow_offset = button.shadow_highlight_offset;
+			if is_mouse_button_pressed(MouseButton::Left) {
+				functions.push((button.function.clone(), entity));
+			}
+		} else {
+			button.played_select_sfx = false;
+		}
+
+		if let Ok(mut render_offset) = master.world.get_mut::<RenderOffset>(entity) {
+			render_offset.0 = render_offset.0.lerp(offset, button.animation_smooth);
+		}
+
+		if let Ok(mut drop_shadow) = master.world.get_mut::<DropShadow>(entity) {
+			drop_shadow.offset = drop_shadow.offset.lerp(shadow_offset, button.animation_smooth);
+		}
+	}
+
+	for function in functions {
+		function.0.0(master, function.1);
 	}
 }
 
@@ -248,10 +293,15 @@ pub fn camera_update_system(master: &mut Master) {
 
 pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
 	if layer == "shadow" {
-		for (_entity, (transform, drop_shadow, texture)) in &mut master.world.query::<(&Transform, &DropShadow, &Texture)>() {
+		for (entity, (transform, drop_shadow, texture)) in &mut master.world.query::<(&Transform, &DropShadow, &Texture)>() {
+			let mut offset = Vec2::ZERO;
+			if let Ok(render_offset) = master.world.get::<RenderOffset>(entity) {
+				offset = render_offset.0;
+			}
+
 			if !rect_in_screen(&master.world, Rect {
-				x: (transform.position.x + drop_shadow.offset.x).round(),
-				y: (transform.position.y + drop_shadow.offset.y).round(),
+				x: (transform.position.x + drop_shadow.offset.x + offset.x).round(),
+				y: (transform.position.y + drop_shadow.offset.y + offset.y).round(),
 				w: (texture.get_size().x * transform.scale.x.abs()).round(),
 				h: (texture.get_size().y * transform.scale.y.abs()).round(),
 			}) {
@@ -260,8 +310,8 @@ pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
 
 			draw_texture_ex(
 				texture.texture,
-				(transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0).round(),
-				(transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0).round(),
+				(transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0 + offset.x).round(),
+				(transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0 + offset.y).round(),
 				drop_shadow.color,
 				DrawTextureParams {
 					dest_size: Some(texture.get_size() * transform.scale),
@@ -274,10 +324,15 @@ pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
 			);
 		}
 
-		for (_entity, (transform, drop_shadow, rectangle)) in &mut master.world.query::<(&Transform, &DropShadow, &Rectangle)>() {
+		for (entity, (transform, drop_shadow, rectangle)) in &mut master.world.query::<(&Transform, &DropShadow, &Rectangle)>() {
+			let mut offset = Vec2::ZERO;
+			if let Ok(render_offset) = master.world.get::<RenderOffset>(entity) {
+				offset = render_offset.0;
+			}
+
 			if !rect_in_screen(&master.world, Rect {
-				x: (transform.position.x + drop_shadow.offset.x).round(),
-				y: (transform.position.y + drop_shadow.offset.y).round(),
+				x: (transform.position.x + drop_shadow.offset.x + offset.x).round(),
+				y: (transform.position.y + drop_shadow.offset.y + offset.y).round(),
 				w: (rectangle.size.x * transform.scale.x).round(),
 				h: (rectangle.size.y * transform.scale.y).round(),
 			}) {
@@ -285,22 +340,27 @@ pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
 			}
 
 			draw_rectangle(
-				transform.position.x.round(),
-				transform.position.y.round(),
+				(transform.position.x + drop_shadow.offset.x + offset.x).round(),
+				(transform.position.y + drop_shadow.offset.y + offset.y).round(),
 				(rectangle.size.x * transform.scale.x).round(),
 				(rectangle.size.y * transform.scale.y).round(),
-				rectangle.color,
+				drop_shadow.color,
 			);
 		}
 	}
 }
 
 pub fn texture_render_system(master: &Master, layer: &'static str) {
-	for (_entity, (transform, texture, render_layer)) in &mut master.world.query::<(&Transform, &Texture, &RenderLayer)>() {
+	for (entity, (transform, texture, render_layer)) in &mut master.world.query::<(&Transform, &Texture, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			let mut offset = Vec2::ZERO;
+			if let Ok(render_offset) = master.world.get::<RenderOffset>(entity) {
+				offset = render_offset.0;
+			}
+
 			if !rect_in_screen(&master.world, Rect {
-				x: transform.position.x.round(),
-				y: transform.position.y.round(),
+				x: (transform.position.x + offset.x).round(),
+				y: (transform.position.y + offset.y).round(),
 				w: (texture.get_size().x * transform.scale.x.abs()).round(),
 				h: (texture.get_size().y * transform.scale.y.abs()).round(),
 			}) {
@@ -309,8 +369,8 @@ pub fn texture_render_system(master: &Master, layer: &'static str) {
 
 			draw_texture_ex(
 				texture.texture,
-				(transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0).round(),
-				(transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0).round(),
+				(transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0 + offset.x).round(),
+				(transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0 + offset.y).round(),
 				texture.color,
 				DrawTextureParams {
 					dest_size: Some((texture.get_size() * transform.scale).round()),
@@ -325,44 +385,50 @@ pub fn texture_render_system(master: &Master, layer: &'static str) {
 	}
 }
 
+// TODO: implement transform?
 pub fn map_render_system(master: &Master, layer: &'static str) {
-	for (_entity, (map, texture, render_layer)) in &mut master.world.query::<(&Map, &Texture, &RenderLayer)>() {
+	for (entity, (map, texture, render_layer)) in &mut master.world.query::<(&Map, &Texture, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			let mut offset = Vec2::ZERO;
+			if let Ok(render_offset) = master.world.get::<RenderOffset>(entity) {
+				offset = render_offset.0;
+			}
 			for y in 0..map.tiles.len() {
 				for x in 0..map.tiles[0].len() {
-					if map.tiles[y][x] != 0
-					&& rect_in_screen(&master.world, Rect {
-						x: x as f32 * map.tile_size as f32,
-						y: y as f32 * map.tile_size as f32,
+					if map.tiles[y][x] == 0
+					&& !rect_in_screen(&master.world, Rect {
+						x: x as f32 * map.tile_size as f32 + offset.x,
+						y: y as f32 * map.tile_size as f32 + offset.y,
 						w: map.tile_size as f32,
 						h: map.tile_size as f32,
 					}) {
-						draw_texture_ex(
-							texture.texture,
-							x as f32 * map.tile_size as f32,
-							y as f32 * map.tile_size as f32,
-							match map.colors.get(&(map.tiles[y][x] - 1)) {
-								Some(color) => *color,
-								None => WHITE,
-							},
-							DrawTextureParams {
-								dest_size: Some(vec2(map.tile_size as f32, map.tile_size as f32)),
-								source: Some(Rect {
-									x: (map.tiles[y][x] - 1) as f32 * map.tile_size as f32,
-									y: match map.y_source_offsets.get(&(map.tiles[y][x] - 1)) {
-										Some(y) => *y,
-										None => 0.0,
-									},
-									w: map.tile_size as f32,
-									h: map.tile_size as f32,
-								}),
-								rotation: 0.0,
-								flip_x: false,
-								flip_y: false,
-								pivot: None,
-							},
-						);
+						continue;
 					}
+					draw_texture_ex(
+						texture.texture,
+						x as f32 * map.tile_size as f32 + offset.x,
+						y as f32 * map.tile_size as f32 + offset.y,
+						match map.colors.get(&(map.tiles[y][x] - 1)) {
+							Some(color) => *color,
+							None => WHITE,
+						},
+						DrawTextureParams {
+							dest_size: Some(vec2(map.tile_size as f32, map.tile_size as f32)),
+							source: Some(Rect {
+								x: (map.tiles[y][x] - 1) as f32 * map.tile_size as f32,
+								y: match map.y_source_offsets.get(&(map.tiles[y][x] - 1)) {
+									Some(y) => *y,
+									None => 0.0,
+								},
+								w: map.tile_size as f32,
+								h: map.tile_size as f32,
+							}),
+							rotation: 0.0,
+							flip_x: false,
+							flip_y: false,
+							pivot: None,
+						},
+					);
 				}
 			}
 		}
@@ -370,11 +436,16 @@ pub fn map_render_system(master: &Master, layer: &'static str) {
 }
 
 pub fn rectangle_render_system(master: &Master, layer: &'static str) {
-	for (_entity, (transform, rectangle, render_layer)) in &mut master.world.query::<(&Transform, &Rectangle, &RenderLayer)>() {
+	for (entity, (transform, rectangle, render_layer)) in &mut master.world.query::<(&Transform, &Rectangle, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			let mut offset = Vec2::ZERO;
+			if let Ok(render_offset) = master.world.get::<RenderOffset>(entity) {
+				offset = render_offset.0;
+			}
+
 			if !rect_in_screen(&master.world, Rect {
-				x: transform.position.x.round(),
-				y: transform.position.y.round(),
+				x: (transform.position.x + offset.x).round(),
+				y: (transform.position.y + offset.y).round(),
 				w: rectangle.size.x.round(),
 				h: rectangle.size.y.round(),
 			}) {
@@ -382,8 +453,8 @@ pub fn rectangle_render_system(master: &Master, layer: &'static str) {
 			}
 
 			draw_rectangle(
-				transform.position.x.round(),
-				transform.position.y.round(),
+				(transform.position.x + offset.x).round(),
+				(transform.position.y + offset.y).round(),
 				rectangle.size.x.round(),
 				rectangle.size.y.round(),
 				rectangle.color,
@@ -393,12 +464,19 @@ pub fn rectangle_render_system(master: &Master, layer: &'static str) {
 }
 
 pub fn text_render_system(master: &Master, layer: &'static str) {
-	for (_entity, (transform, text, render_layer)) in &mut master.world.query::<(&Transform, &TextRenderer, &RenderLayer)>() {
+	for (entity, (transform, text, render_layer)) in &mut master.world.query::<(&Transform, &TextRenderer, &RenderLayer)>() {
 		if layer == render_layer.0 {
+			let mut offset = Vec2::ZERO;
+			if let Ok(render_offset) = master.world.get::<RenderOffset>(entity) {
+				offset = render_offset.0;
+			}
+
+			// TODO: Check if in screen
+
 			draw_text_ex(
 				&text.text,
-				transform.position.x.round(),
-				transform.position.y.round(),
+				(transform.position.x + offset.x).round(),
+				(transform.position.y + offset.y).round(),
 				TextParams {
 					font_scale: (text.params.font_scale * transform.scale.y).round(),
 					font_scale_aspect: (text.params.font_scale_aspect * transform.scale.x / transform.scale.y).round(),

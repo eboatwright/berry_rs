@@ -93,12 +93,12 @@ impl Default for ButtonClickFunction {
 #[derive(Copy, Clone, Default)]
 pub struct Button {
 	pub function: ButtonClickFunction,
-	pub highlight_offset: Vec2,
-	pub animation_smooth: f32,
 	pub hovering_over: bool,
 	pub select_sfx: Option<Sound>,
 	pub played_select_sfx: bool,
-	pub shadow_color: Color,
+	pub animation_smooth: f32,
+	pub highlight_offset: Vec2,
+	pub shadow_highlight_offset: Vec2,
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -311,6 +311,9 @@ impl Default for DropShadow {
 		}
 	}
 }
+
+#[derive(Copy, Clone, PartialEq, Default)]
+pub struct RenderOffset(pub Vec2);
 
 #[derive(Clone, PartialEq)]
 pub struct RenderLayer(pub String);
