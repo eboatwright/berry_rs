@@ -6,7 +6,6 @@ use crate::Master;
 use macroquad::prelude::*;
 use crate::built_in_components::*;
 
-//TODO
 pub fn rigidbody_update_system(master: &mut Master) {
 	for (entity, (transform, rigidbody)) in &mut master.world.query::<(&mut Transform, &mut Rigidbody)>().without::<Static>() {
 		rigidbody.velocity.x += rigidbody.gravity.x;
@@ -56,7 +55,24 @@ pub fn rigidbody_update_system(master: &mut Master) {
 				}
 			}
 
-			//entity collisions
+			for (_other_entity, (other_transform, other_collider)) in &mut master.world.query::<(&Transform, &BoxCollider)>().with::<Static>() {
+				if BoxCollider::overlaps((&collider, transform), (other_collider, other_transform)) {
+					if rigidbody.velocity.x < 0.0 {
+						rigidbody.velocity.x = 0.0;
+						transform.position.x = other_transform.position.x + other_collider.size.x - collider.offset.x + other_collider.offset.x;
+						if rigidbody.gravity.x < 0.0 {
+							rigidbody.grounded = rigidbody.grounded_time;
+						}
+					}
+					if rigidbody.velocity.x > 0.0 {
+						rigidbody.velocity.x = 0.0;
+						transform.position.x = other_transform.position.x - collider.size.x - collider.offset.x + other_collider.offset.x;
+						if rigidbody.gravity.x > 0.0 {
+							rigidbody.grounded = rigidbody.grounded_time;
+						}
+					}
+				}
+			}
 		}
 
 		rigidbody.velocity.y += rigidbody.gravity.y;
@@ -105,7 +121,24 @@ pub fn rigidbody_update_system(master: &mut Master) {
 				}
 			}
 
-			//entity collisions
+			for (_other_entity, (other_transform, other_collider)) in &mut master.world.query::<(&Transform, &BoxCollider)>().with::<Static>() {
+				if BoxCollider::overlaps((&collider, transform), (other_collider, other_transform)) {
+					if rigidbody.velocity.y < 0.0 {
+						rigidbody.velocity.y = 0.0;
+						transform.position.y = other_transform.position.y + other_collider.size.y - collider.offset.y + other_collider.offset.y;
+						if rigidbody.gravity.y < 0.0 {
+							rigidbody.grounded = rigidbody.grounded_time;
+						}
+					}
+					if rigidbody.velocity.y > 0.0 {
+						rigidbody.velocity.y = 0.0;
+						transform.position.y = other_transform.position.y - collider.size.y - collider.offset.y + other_collider.offset.y;
+						if rigidbody.gravity.y > 0.0 {
+							rigidbody.grounded = rigidbody.grounded_time;
+						}
+					}
+				}
+			}
 		}
 	}
 }
