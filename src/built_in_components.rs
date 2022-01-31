@@ -8,9 +8,9 @@ use hecs::World;
 use macroquad::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Default)]
-pub struct Parent(pub u32);
+pub struct EntityReference(pub u32);
 
-impl Parent {
+impl EntityReference {
 	pub fn get(&self, world: &mut World) -> Option<Entity> {
 		world.find_entity_from_id(self.0)
 	}
