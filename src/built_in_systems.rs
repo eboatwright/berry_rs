@@ -347,6 +347,27 @@ pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
 				drop_shadow.color,
 			);
 		}
+
+		for (entity, (transform, drop_shadow, text)) in &mut master.world.query::<(&Transform, &DropShadow, &TextRenderer)>() {
+			let mut offset = Vec2::ZERO;
+			if let Ok(render_offset) = master.world.get::<RenderOffset>(entity) {
+				offset = render_offset.0;
+			}
+
+			// TODO: Check if on screen
+
+			draw_text_ex(
+				&text.text,
+				(transform.position.x + drop_shadow.offset.x + offset.x).round(),
+				(transform.position.y + drop_shadow.offset.y + offset.y).round(),
+				TextParams {
+					font_scale: (text.params.font_scale * transform.scale.y).round(),
+					font_scale_aspect: (text.params.font_scale_aspect * transform.scale.x / transform.scale.y).round(),
+					color: drop_shadow.color,
+					..text.params
+				},
+			);
+		}
 	}
 }
 
