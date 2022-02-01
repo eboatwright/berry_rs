@@ -326,6 +326,14 @@ impl Default for RenderLayer {
 	}
 }
 
+#[derive(Copy, Clone, Default)]
+pub struct SinWave {
+	pub value: f64,
+	pub speed: f64,
+	pub distance: f64,
+	pub offset: f64,
+}
+
 #[derive(Copy, Clone, PartialEq)]
 pub struct Texture {
 	pub texture: Texture2D,

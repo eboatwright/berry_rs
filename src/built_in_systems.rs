@@ -290,6 +290,15 @@ pub fn camera_update_system(master: &mut Master) {
 	}
 }
 
+pub fn sin_wave_update_system(master: &mut Master) {
+	for (entity, sin_wave) in &mut master.world.query::<&mut SinWave>() {
+		sin_wave.value = f64::sin(get_time() * sin_wave.speed + sin_wave.offset) * sin_wave.distance;
+		if let Ok(mut render_offset) = master.world.get_mut::<RenderOffset>(entity) {
+			render_offset.0.y = sin_wave.value as f32;
+		}
+	}
+}
+
 pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
 	if layer == "shadow" {
 		for (entity, (transform, drop_shadow, texture)) in &mut master.world.query::<(&Transform, &DropShadow, &Texture)>() {
