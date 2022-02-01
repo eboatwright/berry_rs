@@ -22,7 +22,6 @@ pub fn rigidbody_update_system(master: &mut Master) {
 
 				for y in clamp(tile_pos.y - 10.0, 0.0, map.tiles.len() as f32) as usize..clamp(tile_pos.y + 10.0, 0.0, map.tiles.len() as f32) as usize {
 					for x in clamp(tile_pos.x - 10.0, 0.0, map.tiles[0].len() as f32) as usize..clamp(tile_pos.x + 10.0, 0.0, map.tiles[0].len() as f32) as usize {
-						println!("{}, {}", x, y);
 						if map.tiles[y][x] != 0 {
 							tile_transform.position = vec2(x as f32, y as f32) * map.tile_size as f32;
 							tile_collision = match map.collisions.get(&map.tiles[y][x]) {
@@ -286,7 +285,7 @@ pub fn camera_update_system(master: &mut Master) {
 			transform.position = transform.position.lerp(
 				target_transform.position + camera.follow_offset,
 				camera.smoothing,
-			);
+			).round();
 		}
 	}
 }

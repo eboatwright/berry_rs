@@ -21,6 +21,7 @@ pub struct Transform {
 	pub position: Vec2,
 	pub scale: Vec2,
 	pub rotation: f32,
+	pub parent: Option<u32>,
 }
 
 impl Default for Transform {
@@ -29,6 +30,7 @@ impl Default for Transform {
 			position: Vec2::ZERO,
 			scale: Vec2::ONE,
 			rotation: 0.0,
+			parent: None,
 		}
 	}
 }
