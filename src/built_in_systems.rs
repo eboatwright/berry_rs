@@ -194,7 +194,7 @@ pub fn button_update_system(master: &mut Master) {
 }
 
 pub fn slider_update_system(master: &mut Master) {
-	for (_entity, (transform, button, slider)) in &mut master.world.query::<(&mut Transform, &Button, &mut Slider)>() {
+	for (_entity, (transform, collider, button, slider)) in &mut master.world.query::<(&mut Transform, &BoxCollider, &mut Button, &mut Slider)>() {
 		if button.hovering_over
 		&& is_mouse_button_down(MouseButton::Left) {
 			slider.dragging = true;
@@ -206,10 +206,11 @@ pub fn slider_update_system(master: &mut Master) {
 
 		let mouse_pos = get_mouse_position(&master.world);
 		if slider.dragging {
+			button.hovering_over = true;
 			if slider.vertical {
-				transform.position.y = mouse_pos.y;
+				transform.position.y = clamp(mouse_pos.y - collider.size.y * 0.5, slider.limits.x, slider.limits.y);
 			} else {
-				transform.position.x = mouse_pos.x;
+				transform.position.x = clamp(mouse_pos.x - collider.size.x * 0.5, slider.limits.x, slider.limits.y);
 			}
 		}
 	}
@@ -318,8 +319,8 @@ pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
 
 			draw_texture_ex(
 				texture.texture,
-				(transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0 + offset.x).round(),
-				(transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0 + offset.y).round(),
+				(transform.position.x - texture.get_size().x * transform.scale.x / 2.0 + texture.get_size().x / 2.0 + drop_shadow.offset.x + offset.x).round(),
+				(transform.position.y - texture.get_size().y * transform.scale.y / 2.0 + texture.get_size().y / 2.0 + drop_shadow.offset.y + offset.y).round(),
 				drop_shadow.color,
 				DrawTextureParams {
 					dest_size: Some(texture.get_size() * transform.scale),
@@ -367,7 +368,7 @@ pub fn drop_shadow_render_system(master: &Master, layer: &'static str) {
 			draw_text_ex(
 				&text.text,
 				(transform.position.x + drop_shadow.offset.x + offset.x).round(),
-				(transform.position.y + drop_shadow.offset.y + offset.y).round(),
+				(transform.position.y + drop_shadow.offset.y + offset.y + measure_text(&text.text, text.params).offset_y).round(),
 				TextParams {
 					font_scale: (text.params.font_scale * transform.scale.y).round(),
 					font_scale_aspect: (text.params.font_scale_aspect * transform.scale.x / transform.scale.y).round(),
@@ -505,7 +506,7 @@ pub fn text_render_system(master: &Master, layer: &'static str) {
 			draw_text_ex(
 				&text.text,
 				(transform.position.x + offset.x).round(),
-				(transform.position.y + offset.y).round(),
+				(transform.position.y + offset.y + measure_text(&text.text, text.params).offset_y).round(),
 				TextParams {
 					font_scale: (text.params.font_scale * transform.scale.y).round(),
 					font_scale_aspect: (text.params.font_scale_aspect * transform.scale.x / transform.scale.y).round(),

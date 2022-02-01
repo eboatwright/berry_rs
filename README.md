@@ -1,5 +1,4 @@
-# THE CURRENT VERSION IS NOW STABLE!
- I have finished the rework!
+# NO LONGER IN DEVELOPMENT
 
 # About
  This is Berry.rs! My engine for Rust, Macroquad and HECS!

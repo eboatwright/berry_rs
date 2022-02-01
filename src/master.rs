@@ -33,6 +33,7 @@ impl Master {
 		animator_update_system(self);
 		particle_update_system(self);
 		camera_update_system(self);
+		sin_wave_update_system(self);
 	}
 
 	pub fn render(&self) {

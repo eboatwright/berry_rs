@@ -6,7 +6,7 @@ impl Master {
 	pub fn load_game_scene(&mut self) {
 		self.world.clear();
 
-		self.world.spawn((
+		let camera = self.world.spawn((
 			Transform::default(),
 			RenderCamera::default(),
 		));

@@ -7,21 +7,11 @@ use hecs::Entity;
 use hecs::World;
 use macroquad::prelude::*;
 
-#[derive(Copy, Clone, PartialEq, Default)]
-pub struct EntityReference(pub u32);
-
-impl EntityReference {
-	pub fn get(&self, world: &mut World) -> Option<Entity> {
-		world.find_entity_from_id(self.0)
-	}
-}
-
 #[derive(Copy, Clone, PartialEq)]
 pub struct Transform {
 	pub position: Vec2,
 	pub scale: Vec2,
 	pub rotation: f32,
-	pub parent: Option<u32>,
 }
 
 impl Default for Transform {
@@ -30,7 +20,6 @@ impl Default for Transform {
 			position: Vec2::ZERO,
 			scale: Vec2::ONE,
 			rotation: 0.0,
-			parent: None,
 		}
 	}
 }
@@ -208,8 +197,8 @@ pub fn get_mouse_position(world: &World) -> Vec2 {
 	for (_entity, (transform, camera)) in &mut world.query::<(&Transform, &RenderCamera)>() {
 		let mut mouse_pos = vec2(mouse_position().0, mouse_position().1);
 	
-		mouse_pos.x = (mouse_pos.x - screen_width() / 2.0) / camera.zoom + transform.position.x;
-		mouse_pos.y = (mouse_pos.y - screen_height() / 2.0) / camera.zoom + transform.position.y;
+		mouse_pos.x = (mouse_pos.x - screen_width() * 0.5) / camera.zoom + transform.position.x;
+		mouse_pos.y = (mouse_pos.y - screen_height() * 0.5) / camera.zoom + transform.position.y;
 
 		return mouse_pos;
 	}
@@ -219,10 +208,10 @@ pub fn get_mouse_position(world: &World) -> Vec2 {
 pub fn camera_bounds(world: &World) -> Rect {
 	for (_entity, transform) in &mut world.query::<&Transform>().with::<RenderCamera>() {
 		return Rect {
-			x: transform.position.x - SCREEN_WIDTH as f32 / 2.0,
-			y: transform.position.y - SCREEN_HEIGHT as f32 / 2.0,
-			w: transform.position.x + SCREEN_WIDTH as f32 / 2.0,
-			h: transform.position.y + SCREEN_HEIGHT as f32 / 2.0,
+			x: transform.position.x - SCREEN_WIDTH as f32 * 0.5,
+			y: transform.position.y - SCREEN_HEIGHT as f32 * 0.5,
+			w: transform.position.x + SCREEN_WIDTH as f32 * 0.5,
+			h: transform.position.y + SCREEN_HEIGHT as f32 * 0.5,
 		};
 	}
 	panic!("'camera_bounds' error: no camera!");
