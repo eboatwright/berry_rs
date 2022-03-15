@@ -1,7 +1,5 @@
 # DEVELOPMENT HAS PAUSED
- I've been getting tired of trying to fit an ECS around with Rust's borrowing rules, so I'm taking a break to learn more about Rust and make a non ECS engine.<br>
- You are still free to use this engine, and fork it, and look into it :)<br>
- New Engine: https://github.com/eboatwright/rutoe
+ Starting new projects, mostly around ASCII and ANSI :)
 
 # About
  This is Berry.rs! My engine for Rust, Macroquad and HECS!
